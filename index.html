@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluación de Adicción al Smartphone</title>
     <style>
-        /* ========== ESTILOS COMPLETOS (igual que en tu archivo original) ========== */
         :root {
             --bg: #f0f4f9;
             --card-bg: #ffffff;
@@ -112,7 +111,7 @@
                 <div class="form-row"><div class="form-group"><label>Programa académico <span class="required">*</span></label><input type="text" id="programa"></div><div class="form-group"><label>Semestre <span class="required">*</span></label><select id="semestre"><option value="">Seleccione...</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option><option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option><option value="9">9°</option><option value="10">10°</option><option value="11+">11° o más</option></select></div></div>
                 <div class="form-row"><div class="form-group"><label>Ciudad de procedencia <span class="required">*</span></label><input type="text" id="ciudad" value="Manizales"></div><div class="form-group"><label>Departamento <span class="required">*</span></label><input type="text" id="departamento" value="Caldas"></div></div>
                 <div class="form-row"><div class="form-group"><label>Correo electrónico <span class="required">*</span></label><input type="email" id="correo"></div><div class="form-group"><label>Horas diarias de uso <span class="required">*</span></label><select id="horas"><option value="">Seleccione...</option><option value="Menos de 1 hora">Menos de 1 hora</option><option value="1 a 3 horas">1 a 3 horas</option><option value="3 a 5 horas">3 a 5 horas</option><option value="5 a 8 horas">5 a 8 horas</option><option value="Más de 8 horas">Más de 8 horas</option></select></div></div>
-                <div class="form-group"><label>¿Diagnóstico de salud mental? <span class="required">*</span></label><div class="radio-group"><label><input type="radio" name="diagnostico" value="Sí"> Sí</label><label><input type="radio" name="diagnostico" value="No"> No</label></div></div>
+                <!-- Eliminada la pregunta de diagnóstico -->
             </div>
         </div>
         <!-- EDAS-18 -->
@@ -149,11 +148,11 @@
 
 <script>
     // ==================== CONFIGURACIÓN ====================
-    // ⚠️ REEMPLAZA ESTA URL CON LA QUE OBTUVISTE EN EL PASO 1 (APPS SCRIPT)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_2O7YFneTE5kMkrpCYZcBJpbcoMbXKsPl3rZP6ljvn-ft2JfRDHcSihg4yJJ7uKe3oQ/exec';  // <--- AQUÍ VA TU URL
+    // ⚠️ REEMPLAZA ESTA URL CON LA OBTUVISTE EN APPS SCRIPT (PASO 1)
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_2O7YFneTE5kMkrpCYZcBJpbcoMbXKsPl3rZP6ljvn-ft2JfRDHcSihg4yJJ7uKe3oQ/exec';  // <--- CAMBIA AQUÍ
     const ADMIN_PASSWORD = 'admin123';
 
-    // ==================== DATOS DE LAS ESCALAS (igual que en tu archivo original) ====================
+    // ==================== DATOS DE LAS ESCALAS ====================
     const edasItems = [
         'Siento ansiedad si me quedo sin batería en el móvil.',
         'Miro aplicaciones del móvil (WhatsApp, Instagram, Facebook, etc.) cada 5 minutos aproximadamente.',
@@ -187,7 +186,7 @@
         'El tiempo para actividades sociales/personales se reduce por usar el móvil.'
     ];
 
-    // Construir las tablas de preguntas dinámicamente (para que se vean las preguntas)
+    // Construir las tablas de preguntas dinámicamente
     function buildMatrix(tbodyId, items, prefix) {
         const tbody = document.getElementById(tbodyId);
         if (!tbody) return;
@@ -246,7 +245,7 @@
         const correo = document.getElementById('correo').value.trim();
         if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('Correo válido');
         if (!document.getElementById('horas').value) errores.push('Horas de uso');
-        if (!document.querySelector('input[name="diagnostico"]:checked')) errores.push('Diagnóstico');
+        // Validación de escalas
         for (let i=1;i<=18;i++) if (!getRadioVal('EDAS_'+i)) errores.push(`EDAS ítem ${i}`);
         for (let i=1;i<=10;i++) if (!getRadioVal('PHUB_'+i)) errores.push(`Phubbing ítem ${i}`);
         if (!document.getElementById('consentCheckbox').checked) errores.push('Consentimiento');
@@ -276,12 +275,10 @@
             departamento: document.getElementById('departamento').value.trim(),
             correo: document.getElementById('correo').value.trim(),
             horas: document.getElementById('horas').value,
-            diagnostico: document.querySelector('input[name="diagnostico"]:checked').value,
             edasResp: edasResp,
             phubbingResp: phubbingResp
         };
         try {
-            // Envío a Google Apps Script
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -404,7 +401,7 @@
 
     async function eliminarRegistroAdmin(index) {
         if (!confirm('¿Eliminar este registro?')) return;
-        const filaFisica = index + 2; // +2 por cabecera y base 1
+        const filaFisica = index + 2;
         try {
             const url = `${APPS_SCRIPT_URL}?action=deleteRow&rowIndex=${filaFisica}&password=${ADMIN_PASSWORD}`;
             await fetch(url);
@@ -459,10 +456,10 @@
         else if (nivelPHUB === 'Alto') interpretacion = 'Fuerte tendencia al phubbing, afecta relaciones.';
         else if (nivelEDAS === 'Moderado' || nivelPHUB === 'Moderado') interpretacion = 'Nivel moderado de riesgo. Monitorear uso.';
         else interpretacion = 'Uso normativo del smartphone.';
-        if (r.diagnostico === 'Sí') interpretacion += ' Antecedente de diagnóstico de salud mental.';
+        // Nota: ya no mostramos diagnóstico
         let html = `<div class="card"><div class="card-header"><h3>${escapeHtml(r.nombre)}</h3></div><div class="card-body">
         <div class="stats-grid">
-            <div class="stat-card"><h4>Datos</h4><p>Edad: ${r.edad} | Sexo: ${r.sexo}<br>Universidad: ${escapeHtml(r.universidad)}<br>Programa: ${escapeHtml(r.programa)} | Sem: ${r.semestre}<br>Horas uso: ${r.horas_uso}<br>Diagnóstico: ${r.diagnostico}</p></div>
+            <div class="stat-card"><h4>Datos</h4><p>Edad: ${r.edad} | Sexo: ${r.sexo}<br>Universidad: ${escapeHtml(r.universidad)}<br>Programa: ${escapeHtml(r.programa)} | Sem: ${r.semestre}<br>Horas uso: ${r.horas_uso}</p></div>
             <div class="stat-card"><h4>Resultados</h4><p>EDAS-18: <strong>${r.puntaje_EDAS}/90</strong> (${nivelEDAS})<br>Phubbing: <strong>${r.puntaje_PHUB}/50</strong> (${nivelPHUB})<br>Candidato entrevista: ${r.candidato_entrevista}</p></div>
         </div>
         <div class="stat-card"><h4>Interpretación</h4><p>${interpretacion}</p></div>
@@ -485,9 +482,9 @@
             mostrarAlerta('No hay datos para exportar', 'error', true);
             return;
         }
-        let csv = "Nombre,Edad,Sexo,Universidad,Programa,Semestre,Ciudad,Departamento,Correo,Horas uso,Diagnóstico,EDAS_total,Nivel_EDAS,PHUB_total,Nivel_PHUB,Entrevista\n";
+        let csv = "Nombre,Edad,Sexo,Universidad,Programa,Semestre,Ciudad,Departamento,Correo,Horas uso,EDAS_total,Nivel_EDAS,PHUB_total,Nivel_PHUB,Entrevista\n";
         datosGlobales.forEach(r => {
-            csv += `"${escapeCsv(r.nombre)}",${r.edad},"${escapeCsv(r.sexo)}","${escapeCsv(r.universidad)}","${escapeCsv(r.programa)}","${r.semestre}","${escapeCsv(r.ciudad)}","${escapeCsv(r.departamento)}","${escapeCsv(r.correo)}","${r.horas_uso}","${r.diagnostico}",${r.puntaje_EDAS},"${r.nivel_EDAS}",${r.puntaje_PHUB},"${r.nivel_PHUB}","${r.candidato_entrevista}"\n`;
+            csv += `"${escapeCsv(r.nombre)}",${r.edad},"${escapeCsv(r.sexo)}","${escapeCsv(r.universidad)}","${escapeCsv(r.programa)}","${r.semestre}","${escapeCsv(r.ciudad)}","${escapeCsv(r.departamento)}","${escapeCsv(r.correo)}","${r.horas_uso}",${r.puntaje_EDAS},"${r.nivel_EDAS}",${r.puntaje_PHUB},"${r.nivel_PHUB}","${r.candidato_entrevista}"\n`;
         });
         const blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8;"});
         const link = document.createElement("a");
