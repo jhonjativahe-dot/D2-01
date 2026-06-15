@@ -56,9 +56,9 @@
         .btn-primary:hover { background:var(--primary-dark); }
         .btn-secondary { background:#fff; color:var(--primary); border:1.5px solid var(--border); }
         .btn-danger { background:#fff; color:var(--error); border:1.5px solid var(--error); }
-        .alert { padding:12px 16px; border-radius:6px; margin-bottom:12px; display:none; }
-        .alert-success { background:var(--success-bg); color:#1a5c2a; display:block; }
-        .alert-error { background:var(--error-bg); color:#a50e0e; display:block; }
+        .alert { padding:12px 16px; border-radius:6px; margin-bottom:12px; display:none; font-weight:500; }
+        .alert-success { background:var(--success-bg); color:#1a5c2a; display:block; border-left:4px solid var(--success); }
+        .alert-error { background:var(--error-bg); color:#a50e0e; display:block; border-left:4px solid var(--error); }
         .hidden-field { display: none; }
         .hidden-field.visible { display: flex; }
         .tab-nav { display:flex; gap:4px; background:#e8ecf1; border-radius:20px; padding:4px; margin-bottom:20px; }
@@ -151,7 +151,7 @@
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfy.../exec';  // <--- CAMBIA AQUÍ
     const ADMIN_PASSWORD = 'admin123';
 
-    // ==================== DATOS DE LAS ESCALAS (versiones oficiales) ====================
+    // ==================== DATOS DE LAS ESCALAS ====================
     const edasItems = [
         'Siento ansiedad si me quedo sin batería en el móvil.',
         'Miro alguna de las aplicaciones del móvil (por ejemplo, WhatsApp, Instagram, Facebook, etc.) cada 5 minutos aproximadamente.',
@@ -229,30 +229,36 @@
 
     function validarFormulario() {
         let errores = [];
-        if (!document.getElementById('nombre').value.trim()) errores.push('Nombre');
+        // Validación de campos sociodemográficos con mensajes más claros
+        if (!document.getElementById('nombre').value.trim()) errores.push('• Nombre completo');
         const edad = parseInt(document.getElementById('edad').value);
-        if (isNaN(edad) || edad < 14 || edad > 99) errores.push('Edad (14-99)');
-        if (!document.getElementById('sexo').value) errores.push('Sexo');
+        if (isNaN(edad) || edad < 14 || edad > 99) errores.push('• Edad (debe ser entre 14 y 99 años)');
+        if (!document.getElementById('sexo').value) errores.push('• Sexo');
         let uni = document.getElementById('universidad').value;
-        if (!uni) errores.push('Universidad');
-        if (uni === 'Otra' && !document.getElementById('otraUniversidad').value.trim()) errores.push('Especificar universidad');
-        if (!document.getElementById('programa').value.trim()) errores.push('Programa');
-        if (!document.getElementById('semestre').value) errores.push('Semestre');
-        if (!document.getElementById('ciudad').value.trim()) errores.push('Ciudad');
-        if (!document.getElementById('departamento').value.trim()) errores.push('Departamento');
+        if (!uni) errores.push('• Universidad');
+        if (uni === 'Otra' && !document.getElementById('otraUniversidad').value.trim()) errores.push('• Especificar universidad');
+        if (!document.getElementById('programa').value.trim()) errores.push('• Programa académico');
+        if (!document.getElementById('semestre').value) errores.push('• Semestre');
+        if (!document.getElementById('ciudad').value.trim()) errores.push('• Ciudad');
+        if (!document.getElementById('departamento').value.trim()) errores.push('• Departamento');
         const correo = document.getElementById('correo').value.trim();
-        if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('Correo válido');
-        if (!document.getElementById('horas').value) errores.push('Horas de uso');
-        for (let i=1;i<=18;i++) if (!getRadioVal('EDAS_'+i)) errores.push(`EDAS ítem ${i}`);
-        for (let i=1;i<=10;i++) if (!getRadioVal('PHUB_'+i)) errores.push(`Phubbing ítem ${i}`);
-        if (!document.getElementById('consentCheckbox').checked) errores.push('Consentimiento');
+        if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('• Correo electrónico válido');
+        if (!document.getElementById('horas').value) errores.push('• Horas diarias de uso');
+        // Validación escalas
+        for (let i=1;i<=18;i++) if (!getRadioVal('EDAS_'+i)) { errores.push(`• EDAS-18: ítem ${i}`); break; } // solo mostramos el primero para no abrumar
+        for (let i=1;i<=10;i++) if (!getRadioVal('PHUB_'+i)) { errores.push(`• Phubbing: ítem ${i}`); break; }
+        if (!document.getElementById('consentCheckbox').checked) errores.push('• Aceptar el consentimiento informado');
         return { ok: errores.length === 0, errores };
     }
 
     async function enviarRespuesta() {
         const valid = validarFormulario();
         if (!valid.ok) {
-            mostrarAlerta('❌ ' + valid.errores.join(', '), 'error');
+            // Mensaje amigable de error
+            let mensajeError = "❌ No se pudo enviar el test. Por favor completa los siguientes campos:\n\n";
+            mensajeError += valid.errores.join('\n');
+            mensajeError += "\n\n✅ Revisa y vuelve a intentarlo.";
+            mostrarAlerta(mensajeError, 'error');
             return;
         }
         const edasResp = [];
@@ -276,17 +282,21 @@
             phubbingResp: phubbingResp
         };
         try {
+            // Envío a Google Apps Script
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            // Mensaje de éxito personalizado y amigable
-            mostrarAlerta('¡Test enviado con éxito! Muchas gracias por tu participación.', 'success');
-            resetFormulario();
+            // Mensaje de éxito claro y agradable
+            mostrarAlerta('✅ ¡Test enviado con éxito! Muchas gracias por tu participación.\n\nTus respuestas han sido registradas.', 'success');
+            // Pequeño retraso antes de resetear para que el usuario alcance a leer
+            setTimeout(() => {
+                resetFormulario();
+            }, 2000);
         } catch(error) {
-            mostrarAlerta('❌ Error al guardar: ' + error.message, 'error');
+            mostrarAlerta('❌ Error de conexión. Por favor verifica tu internet e intenta nuevamente.\n\nDetalle: ' + error.message, 'error');
         }
     }
 
@@ -295,7 +305,8 @@
         div.textContent = msg;
         div.className = `alert alert-${tipo}`;
         div.style.display = 'block';
-        setTimeout(() => { div.style.display = 'none'; }, 5000);
+        // La alerta permanecerá 5 segundos (o más para errores)
+        setTimeout(() => { div.style.display = 'none'; }, 6000);
     }
 
     function resetFormulario() {
@@ -308,9 +319,11 @@
         document.getElementById('departamento').value = 'Caldas';
         document.getElementById('rowOtraUniversidad').classList.remove('visible');
         document.getElementById('otraUniversidad').value = '';
+        // Limpiar alertas por si acaso
+        document.getElementById('globalAlert').style.display = 'none';
     }
 
-    // ==================== PANEL DE ADMINISTRACIÓN ====================
+    // ==================== PANEL DE ADMINISTRACIÓN (sin cambios relevantes) ====================
     let datosGlobales = [];
 
     async function cargarDatosAdmin() {
