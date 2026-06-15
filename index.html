@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de Adicción al Smartphone</title>
+    <style>
+        /* ========== ESTILOS COMPLETOS (igual que en tu archivo original) ========== */
+        :root {
+            --bg: #f0f4f9;
+            --card-bg: #ffffff;
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --primary-light: #e8f0fe;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+            --error: #d93025;
+            --error-bg: #fce8e6;
+            --success: #0d904f;
+            --success-bg: #e6f4ea;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --radius: 8px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); line-height:1.6; padding-bottom:40px; }
+        .header { background:var(--card-bg); border-bottom:1px solid var(--border); padding:14px 0; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); }
+        .header-inner { max-width:950px; margin:0 auto; padding:0 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .header-icon { width:38px; height:38px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; }
+        .header-icon svg { width:20px; height:20px; fill:#fff; }
+        .header h1 { font-size:1.2rem; font-weight:600; }
+        .admin-btn { background:var(--primary-light); color:var(--primary); border:1px solid var(--primary); border-radius:20px; padding:6px 14px; cursor:pointer; font-size:0.8rem; font-weight:500; margin-left:auto; transition:0.2s; }
+        .admin-btn:hover { background:var(--primary); color:#fff; }
+        .container { max-width:950px; margin:0 auto; padding:20px; }
+        .card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); padding:24px 28px; margin-bottom:18px; }
+        .card-header { margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+        .card-number { width:30px; height:30px; border-radius:50%; background:var(--primary); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; }
+        .card-header h2 { font-size:1.1rem; font-weight:600; }
+        .form-row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:14px; }
+        .form-group { display:flex; flex-direction:column; gap:5px; flex:1 1 200px; }
+        .form-group label { font-size:0.84rem; font-weight:500; }
+        .required { color:var(--error); }
+        .form-group input, .form-group select { padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-family:inherit; width:100%; }
+        .radio-group { display:flex; gap:18px; margin-top:4px; }
+        .radio-group label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+        .matrix-wrapper { overflow-x:auto; }
+        .matrix-table { width:100%; border-collapse:collapse; min-width:600px; font-size:0.82rem; }
+        .matrix-table th, .matrix-table td { padding:8px 6px; text-align:center; border-bottom:1px solid #f0f0f0; }
+        .col-question { text-align:left; width:38%; }
+        .matrix-table input[type="radio"] { accent-color:var(--primary); width:16px; height:16px; cursor:pointer; }
+        .consent-box { background:#f9fafb; border:1.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; display:flex; align-items:flex-start; gap:10px; cursor:pointer; }
+        .consent-box.checked { border-color:var(--primary); background:var(--primary-light); }
+        .consent-box input[type="checkbox"] { width:19px; height:19px; accent-color:var(--primary); margin-top:2px; }
+        .btn-row { display:flex; justify-content:center; gap:10px; margin-top:16px; }
+        .btn { padding:11px 28px; font-size:0.9rem; font-weight:600; border:none; border-radius:6px; cursor:pointer; }
+        .btn-primary { background:var(--primary); color:#fff; }
+        .btn-primary:hover { background:var(--primary-dark); }
+        .btn-secondary { background:#fff; color:var(--primary); border:1.5px solid var(--border); }
+        .btn-danger { background:#fff; color:var(--error); border:1.5px solid var(--error); }
+        .alert { padding:12px 16px; border-radius:6px; margin-bottom:12px; display:none; }
+        .alert-success { background:var(--success-bg); color:#1a5c2a; display:block; }
+        .alert-error { background:var(--error-bg); color:#a50e0e; display:block; }
+        .hidden-field { display: none; }
+        .hidden-field.visible { display: flex; }
+        .tab-nav { display:flex; gap:4px; background:#e8ecf1; border-radius:20px; padding:4px; margin-bottom:20px; }
+        .tab-btn { padding:8px 18px; border:none; background:transparent; border-radius:16px; cursor:pointer; font-weight:500; }
+        .tab-btn.active { background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.1); color:var(--primary); }
+        .data-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+        .data-table th { background:#f1f3f4; padding:8px; text-align:left; }
+        .data-table td { padding:8px; border-bottom:1px solid #eee; }
+        .btn-sm { padding:5px 12px; font-size:0.75rem; border-radius:4px; cursor:pointer; border:1px solid #ccc; background:#fff; }
+        .btn-sm:hover { background:#fee; border-color:var(--error); }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:14px; margin-bottom:20px; }
+        .stat-card { background:#f8f9fb; border-radius:6px; padding:14px; border:1px solid #e8ecf1; }
+        .progress-bar { height:8px; background:#e0e0e0; border-radius:4px; overflow:hidden; margin:6px 0; }
+        .progress-fill { height:100%; border-radius:4px; }
+        .fill-low { background:#0d904f; }
+        .fill-moderate { background:#f9a825; }
+        .fill-high { background:#d93025; }
+        .interview-alert { background:#fff3e0; border:2px solid #e65100; border-radius:8px; padding:16px 20px; text-align:center; margin-top:10px; }
+        .individual-select { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+        .individual-select select { padding:10px 14px; border-radius:6px; border:1.5px solid var(--border); min-width:250px; }
+        .item-analysis { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+        .item-row { display:flex; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #f0f0f0; }
+        .item-num { width:30px; font-weight:600; }
+        .item-text { flex:1; font-size:0.82rem; }
+        .item-value { width:40px; text-align:center; font-weight:600; }
+        .item-bar { width:120px; height:8px; background:#e0e0e0; border-radius:4px; overflow:hidden; }
+        .item-bar-fill { height:100%; }
+        @media (max-width:700px) { .card { padding:16px 12px; } .matrix-table { min-width:500px; } }
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="header-inner">
+        <div class="header-icon"><svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg></div>
+        <h1>Evaluación de Adicción al Smartphone</h1>
+        <button class="admin-btn" id="adminToggleBtn">🔐 Admin</button>
+    </div>
+</header>
+<main class="container">
+    <!-- Vista pública (formulario) -->
+    <div id="vistaPublica">
+        <div id="globalAlert" class="alert"></div>
+        <!-- Datos Sociodemográficos -->
+        <div class="card">
+            <div class="card-header"><div class="card-number">1</div><h2>Datos Sociodemográficos</h2></div>
+            <div class="card-body">
+                <div class="form-row"><div class="form-group"><label>Nombre completo <span class="required">*</span></label><input type="text" id="nombre"></div><div class="form-group"><label>Edad <span class="required">*</span></label><input type="number" id="edad" min="14" max="99"></div></div>
+                <div class="form-row"><div class="form-group"><label>Sexo <span class="required">*</span></label><select id="sexo"><option value="">Seleccione...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div><div class="form-group"><label>Universidad <span class="required">*</span></label><select id="universidad"><option value="">Seleccione...</option><option value="Universidad de Caldas">Universidad de Caldas</option><option value="Universidad Nacional sede Manizales">Universidad Nacional sede Manizales</option><option value="Universidad Católica Luis Amigó">Universidad Católica Luis Amigó</option><option value="Universidad Autónoma de Manizales">Universidad Autónoma de Manizales</option><option value="Otra">Otra</option></select></div></div>
+                <div class="form-row hidden-field" id="rowOtraUniversidad"><div class="form-group"><label>Especifique la universidad <span class="required">*</span></label><input type="text" id="otraUniversidad"></div></div>
+                <div class="form-row"><div class="form-group"><label>Programa académico <span class="required">*</span></label><input type="text" id="programa"></div><div class="form-group"><label>Semestre <span class="required">*</span></label><select id="semestre"><option value="">Seleccione...</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option><option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option><option value="9">9°</option><option value="10">10°</option><option value="11+">11° o más</option></select></div></div>
+                <div class="form-row"><div class="form-group"><label>Ciudad de procedencia <span class="required">*</span></label><input type="text" id="ciudad" value="Manizales"></div><div class="form-group"><label>Departamento <span class="required">*</span></label><input type="text" id="departamento" value="Caldas"></div></div>
+                <div class="form-row"><div class="form-group"><label>Correo electrónico <span class="required">*</span></label><input type="email" id="correo"></div><div class="form-group"><label>Horas diarias de uso <span class="required">*</span></label><select id="horas"><option value="">Seleccione...</option><option value="Menos de 1 hora">Menos de 1 hora</option><option value="1 a 3 horas">1 a 3 horas</option><option value="3 a 5 horas">3 a 5 horas</option><option value="5 a 8 horas">5 a 8 horas</option><option value="Más de 8 horas">Más de 8 horas</option></select></div></div>
+                <div class="form-group"><label>¿Diagnóstico de salud mental? <span class="required">*</span></label><div class="radio-group"><label><input type="radio" name="diagnostico" value="Sí"> Sí</label><label><input type="radio" name="diagnostico" value="No"> No</label></div></div>
+            </div>
+        </div>
+        <!-- EDAS-18 -->
+        <div class="card">
+            <div class="card-header"><div class="card-number">2</div><h2>Escala EDAS-18</h2></div>
+            <div class="card-body"><div class="matrix-wrapper"><table class="matrix-table" id="tableEDAS"><thead><tr><th class="col-question">Afirmación</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody id="tbodyEDAS"></tbody></table></div></div>
+        </div>
+        <!-- Phubbing -->
+        <div class="card">
+            <div class="card-header"><div class="card-number">3</div><h2>Escala Phubbing</h2></div>
+            <div class="card-body"><div class="matrix-wrapper"><table class="matrix-table" id="tablePhubbing"><thead><tr><th class="col-question">Afirmación</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody id="tbodyPhubbing"></tbody></table></div></div>
+        </div>
+        <!-- Consentimiento -->
+        <div class="card">
+            <div class="card-header"><div class="card-number">4</div><h2>Consentimiento Informado</h2></div>
+            <div class="card-body"><div class="consent-box" id="consentBox"><input type="checkbox" id="consentCheckbox"><label><strong>* Declaro que soy mayor de edad y acepto participar voluntariamente.</strong><br>Autorizo el uso anónimo de mis respuestas con fines académicos.</label></div></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-secondary" onclick="resetFormulario()">Limpiar</button><button class="btn btn-primary" onclick="enviarRespuesta()">Enviar</button></div>
+    </div>
+
+    <!-- Vista Admin (oculta al inicio) -->
+    <div id="vistaAdmin" style="display:none;">
+        <div id="adminAlert" class="alert"></div>
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="cambiarPestanaAdmin('estadisticas')">📊 Estadísticas</button>
+            <button class="tab-btn" onclick="cambiarPestanaAdmin('individual')">👤 Análisis Individual</button>
+            <button class="tab-btn" onclick="cambiarPestanaAdmin('gestion')">⚙️ Gestión de datos</button>
+        </div>
+        <div id="adminEstadisticas" class="admin-section active"><div class="card" id="statsContentAdmin">Cargando...</div></div>
+        <div id="adminIndividual" class="admin-section"><div class="card"><div class="individual-select"><label>Participante:</label><select id="selectParticipante" onchange="mostrarAnalisisIndividualAdmin()"></select></div><div id="analisisIndividualAdmin"></div></div></div>
+        <div id="adminGestion" class="admin-section"><div class="card"><div class="btn-row" style="justify-content:flex-start;"><button class="btn btn-secondary" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn btn-danger" onclick="eliminarTodosRegistros()">🗑️ Eliminar todos</button></div><div style="overflow-x:auto; margin-top:12px;"><table class="data-table" id="tablaRegistrosAdmin"><thead><tr><th>Nombre</th><th>Edad</th><th>Sexo</th><th>EDAS</th><th>Nivel</th><th>Phubbing</th><th>Nivel</th><th>Entrevista</th><th>Acción</th></tr></thead><tbody><tr><td colspan="9">Cargando...</td></tr></tbody></table></div></div></div>
+    </div>
+</main>
+
+<script>
+    // ==================== CONFIGURACIÓN ====================
+    // ⚠️ REEMPLAZA ESTA URL CON LA QUE OBTUVISTE EN EL PASO 1 (APPS SCRIPT)
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_2O7YFneTE5kMkrpCYZcBJpbcoMbXKsPl3rZP6ljvn-ft2JfRDHcSihg4yJJ7uKe3oQ/exec';  // <--- AQUÍ VA TU URL
+    const ADMIN_PASSWORD = 'admin123';
+
+    // ==================== DATOS DE LAS ESCALAS (igual que en tu archivo original) ====================
+    const edasItems = [
+        'Siento ansiedad si me quedo sin batería en el móvil.',
+        'Miro aplicaciones del móvil (WhatsApp, Instagram, Facebook, etc.) cada 5 minutos aproximadamente.',
+        'Mi familia, pareja o amigos se han quejado del tiempo que ocupo mirando el móvil.',
+        'Dedico un tiempo excesivo a mirar distintas aplicaciones del móvil.',
+        'Consulto el móvil constantemente incluso cuando estoy solo/a con otra persona.',
+        'Miro aplicaciones del móvil cada hora aproximadamente.',
+        'No dedico más tiempo del necesario a usar las aplicaciones de comunicación y ocio del móvil.',
+        'Miro frecuentemente el móvil en clase o en el trabajo.',
+        'Soy incapaz de dejar de usar el móvil aunque lo intente.',
+        'Dedico gran parte del día a usar las distintas aplicaciones del móvil.',
+        'Dedico parte de mi jornada laboral o estudiantil a consultar el móvil.',
+        'Mi principal motivación para una fotografía es compartirla inmediatamente por el móvil.',
+        'El uso del móvil ha interferido con mi desempeño académico y/o laboral.',
+        'De mis actividades diarias, el uso del móvil es a la que dedico más tiempo.',
+        'Si me despierto durante la noche siempre miro el móvil.',
+        'He intentado disminuir el uso del móvil pero no puedo.',
+        'Soy más desinhibido/a al usar aplicaciones de mensajería que en la vida diaria.',
+        'Suelo usar el móvil en situaciones sociales (bar, comida familiar, etc.).'
+    ];
+    const phubbingItems = [
+        'Estoy pendiente del móvil cuando estoy en compañía de otras personas.',
+        'Estoy ocupado/a con el móvil cuando estoy con mis amigos/as.',
+        'Otras personas se quejan sobre mi uso del móvil.',
+        'Estoy ocupado/a con el móvil cuando estoy con mis familiares.',
+        'A mi pareja le molesta que esté ocupado/a con el móvil (o familiares).',
+        'Mi móvil está siempre a mi alcance.',
+        'Lo primero al despertarme es mirar mis mensajes en el móvil.',
+        'Me siento vacío/a sin mi móvil.',
+        'Cada día aumenta mi uso del móvil.',
+        'El tiempo para actividades sociales/personales se reduce por usar el móvil.'
+    ];
+
+    // Construir las tablas de preguntas dinámicamente (para que se vean las preguntas)
+    function buildMatrix(tbodyId, items, prefix) {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        items.forEach((texto, i) => {
+            const tr = document.createElement('tr');
+            const tdQ = document.createElement('td'); tdQ.className = 'col-question'; tdQ.textContent = (i+1)+'. '+texto; tr.appendChild(tdQ);
+            for (let v=1; v<=5; v++) {
+                const td = document.createElement('td');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = prefix+'_'+(i+1);
+                radio.value = v;
+                radio.required = true;
+                td.appendChild(radio);
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        });
+    }
+    buildMatrix('tbodyEDAS', edasItems, 'EDAS');
+    buildMatrix('tbodyPhubbing', phubbingItems, 'PHUB');
+
+    // Lógica de "Otra universidad"
+    document.getElementById('universidad').addEventListener('change', function() {
+        const row = document.getElementById('rowOtraUniversidad');
+        if (this.value === 'Otra') row.classList.add('visible');
+        else row.classList.remove('visible');
+    });
+    // Consentimiento
+    document.getElementById('consentBox').addEventListener('click', () => {
+        const cb = document.getElementById('consentCheckbox');
+        cb.checked = !cb.checked;
+        document.getElementById('consentBox').classList.toggle('checked', cb.checked);
+    });
+
+    // Funciones auxiliares
+    function getRadioVal(name) {
+        const r = document.querySelector(`input[name="${name}"]:checked`);
+        return r ? parseInt(r.value) : null;
+    }
+
+    function validarFormulario() {
+        let errores = [];
+        if (!document.getElementById('nombre').value.trim()) errores.push('Nombre');
+        const edad = parseInt(document.getElementById('edad').value);
+        if (isNaN(edad) || edad < 14 || edad > 99) errores.push('Edad (14-99)');
+        if (!document.getElementById('sexo').value) errores.push('Sexo');
+        let uni = document.getElementById('universidad').value;
+        if (!uni) errores.push('Universidad');
+        if (uni === 'Otra' && !document.getElementById('otraUniversidad').value.trim()) errores.push('Especificar universidad');
+        if (!document.getElementById('programa').value.trim()) errores.push('Programa');
+        if (!document.getElementById('semestre').value) errores.push('Semestre');
+        if (!document.getElementById('ciudad').value.trim()) errores.push('Ciudad');
+        if (!document.getElementById('departamento').value.trim()) errores.push('Departamento');
+        const correo = document.getElementById('correo').value.trim();
+        if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('Correo válido');
+        if (!document.getElementById('horas').value) errores.push('Horas de uso');
+        if (!document.querySelector('input[name="diagnostico"]:checked')) errores.push('Diagnóstico');
+        for (let i=1;i<=18;i++) if (!getRadioVal('EDAS_'+i)) errores.push(`EDAS ítem ${i}`);
+        for (let i=1;i<=10;i++) if (!getRadioVal('PHUB_'+i)) errores.push(`Phubbing ítem ${i}`);
+        if (!document.getElementById('consentCheckbox').checked) errores.push('Consentimiento');
+        return { ok: errores.length === 0, errores };
+    }
+
+    async function enviarRespuesta() {
+        const valid = validarFormulario();
+        if (!valid.ok) {
+            mostrarAlerta('❌ ' + valid.errores.join(', '), 'error');
+            return;
+        }
+        const edasResp = [];
+        for (let i=1;i<=18;i++) edasResp.push(getRadioVal('EDAS_'+i));
+        const phubbingResp = [];
+        for (let i=1;i<=10;i++) phubbingResp.push(getRadioVal('PHUB_'+i));
+        let universidad = document.getElementById('universidad').value;
+        if (universidad === 'Otra') universidad = document.getElementById('otraUniversidad').value.trim();
+        const payload = {
+            nombre: document.getElementById('nombre').value.trim(),
+            edad: parseInt(document.getElementById('edad').value),
+            sexo: document.getElementById('sexo').value,
+            universidad: universidad,
+            programa: document.getElementById('programa').value.trim(),
+            semestre: document.getElementById('semestre').value,
+            ciudad: document.getElementById('ciudad').value.trim(),
+            departamento: document.getElementById('departamento').value.trim(),
+            correo: document.getElementById('correo').value.trim(),
+            horas: document.getElementById('horas').value,
+            diagnostico: document.querySelector('input[name="diagnostico"]:checked').value,
+            edasResp: edasResp,
+            phubbingResp: phubbingResp
+        };
+        try {
+            // Envío a Google Apps Script
+            await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            mostrarAlerta('✅ Respuesta guardada correctamente', 'success');
+            resetFormulario();
+        } catch(error) {
+            mostrarAlerta('❌ Error al guardar: ' + error.message, 'error');
+        }
+    }
+
+    function mostrarAlerta(msg, tipo, admin=false) {
+        const div = admin ? document.getElementById('adminAlert') : document.getElementById('globalAlert');
+        div.textContent = msg;
+        div.className = `alert alert-${tipo}`;
+        div.style.display = 'block';
+        setTimeout(() => { div.style.display = 'none'; }, 5000);
+    }
+
+    function resetFormulario() {
+        document.querySelectorAll('#vistaPublica input[type="text"], #vistaPublica input[type="number"], #vistaPublica input[type="email"]').forEach(el => el.value = '');
+        document.querySelectorAll('#vistaPublica select').forEach(el => el.selectedIndex = 0);
+        document.querySelectorAll('#vistaPublica input[type="radio"]').forEach(el => el.checked = false);
+        document.getElementById('consentCheckbox').checked = false;
+        document.getElementById('consentBox').classList.remove('checked');
+        document.getElementById('ciudad').value = 'Manizales';
+        document.getElementById('departamento').value = 'Caldas';
+        document.getElementById('rowOtraUniversidad').classList.remove('visible');
+        document.getElementById('otraUniversidad').value = '';
+    }
+
+    // ==================== PANEL DE ADMINISTRACIÓN ====================
+    let datosGlobales = [];
+
+    async function cargarDatosAdmin() {
+        try {
+            const url = `${APPS_SCRIPT_URL}?action=getData&password=${ADMIN_PASSWORD}`;
+            const res = await fetch(url);
+            const json = await res.json();
+            if (json.success) {
+                datosGlobales = json.data;
+                actualizarEstadisticasAdmin();
+                actualizarTablaRegistrosAdmin();
+                actualizarSelectParticipantesAdmin();
+            } else {
+                mostrarAlerta('Error al cargar datos', 'error', true);
+            }
+        } catch(e) {
+            mostrarAlerta('Error de red: ' + e.message, 'error', true);
+        }
+    }
+
+    function actualizarEstadisticasAdmin() {
+        const div = document.getElementById('statsContentAdmin');
+        if (!datosGlobales.length) {
+            div.innerHTML = '<p>No hay datos aún.</p>';
+            return;
+        }
+        const n = datosGlobales.length;
+        let sumE=0, sumP=0;
+        const cntE = {Bajo:0, Moderado:0, Alto:0};
+        const cntP = {Bajo:0, Moderado:0, Alto:0};
+        const sexoC = {Masculino:0, Femenino:0};
+        const horasC = {};
+        const edades = [];
+        datosGlobales.forEach(r => {
+            let e = r.puntaje_EDAS;
+            let p = r.puntaje_PHUB;
+            sumE += e; sumP += p;
+            cntE[r.nivel_EDAS]++; cntP[r.nivel_PHUB]++;
+            if (r.sexo === 'Masculino') sexoC.Masculino++;
+            else if (r.sexo === 'Femenino') sexoC.Femenino++;
+            horasC[r.horas_uso] = (horasC[r.horas_uso] || 0) + 1;
+            edades.push(r.edad);
+        });
+        const promE = (sumE/n).toFixed(1);
+        const promP = (sumP/n).toFixed(1);
+        const pct = v => ((v/n)*100).toFixed(1);
+        const entrevistas = datosGlobales.filter(r => r.candidato_entrevista === 'SÍ').length;
+        div.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card"><h4>📋 Participantes</h4><p style="font-size:2rem;">${n}</p></div>
+                <div class="stat-card"><h4>📱 Promedio EDAS-18</h4><p style="font-size:2rem;">${promE} /90</p></div>
+                <div class="stat-card"><h4>📵 Promedio Phubbing</h4><p style="font-size:2rem;">${promP} /50</p></div>
+                <div class="stat-card"><h4>🔔 Candidatos entrevista</h4><p style="font-size:2rem;">${entrevistas} (${pct(entrevistas)}%)</p></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><h4>EDAS-18</h4><p>Bajo: ${cntE.Bajo} (${pct(cntE.Bajo)}%)</p><div class="progress-bar"><div class="progress-fill fill-low" style="width:${pct(cntE.Bajo)}%"></div></div><p>Moderado: ${cntE.Moderado} (${pct(cntE.Moderado)}%)</p><div class="progress-bar"><div class="progress-fill fill-moderate" style="width:${pct(cntE.Moderado)}%"></div></div><p>Alto: ${cntE.Alto} (${pct(cntE.Alto)}%)</p><div class="progress-bar"><div class="progress-fill fill-high" style="width:${pct(cntE.Alto)}%"></div></div></div>
+                <div class="stat-card"><h4>Phubbing</h4><p>Bajo: ${cntP.Bajo} (${pct(cntP.Bajo)}%)</p><div class="progress-bar"><div class="progress-fill fill-low" style="width:${pct(cntP.Bajo)}%"></div></div><p>Moderado: ${cntP.Moderado} (${pct(cntP.Moderado)}%)</p><div class="progress-bar"><div class="progress-fill fill-moderate" style="width:${pct(cntP.Moderado)}%"></div></div><p>Alto: ${cntP.Alto} (${pct(cntP.Alto)}%)</p><div class="progress-bar"><div class="progress-fill fill-high" style="width:${pct(cntP.Alto)}%"></div></div></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><h4>Sexo</h4><p>Masculino: ${sexoC.Masculino} (${pct(sexoC.Masculino)}%)</p><p>Femenino: ${sexoC.Femenino} (${pct(sexoC.Femenino)}%)</p></div>
+                <div class="stat-card"><h4>Horas de uso</h4>${Object.entries(horasC).map(([k,v]) => `<p>${k}: ${v} (${pct(v)}%)</p>`).join('')}</div>
+            </div>
+        `;
+    }
+
+    function actualizarTablaRegistrosAdmin() {
+        const tbody = document.querySelector('#tablaRegistrosAdmin tbody');
+        if (!datosGlobales.length) {
+            tbody.innerHTML = '<tr><td colspan="9">No hay registros</td></tr>';
+            return;
+        }
+        tbody.innerHTML = datosGlobales.map((r, i) => `
+            <tr>
+                <td>${escapeHtml(r.nombre)}</td>
+                <td>${r.edad}</td>
+                <td>${r.sexo}</td>
+                <td>${r.puntaje_EDAS}</td>
+                <td>${r.nivel_EDAS}</td>
+                <td>${r.puntaje_PHUB}</td>
+                <td>${r.nivel_PHUB}</td>
+                <td>${r.candidato_entrevista}</td>
+                <td><button class="btn-sm" onclick="eliminarRegistroAdmin(${i})">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function eliminarRegistroAdmin(index) {
+        if (!confirm('¿Eliminar este registro?')) return;
+        const filaFisica = index + 2; // +2 por cabecera y base 1
+        try {
+            const url = `${APPS_SCRIPT_URL}?action=deleteRow&rowIndex=${filaFisica}&password=${ADMIN_PASSWORD}`;
+            await fetch(url);
+            await cargarDatosAdmin();
+        } catch(e) {
+            mostrarAlerta('Error al eliminar', 'error', true);
+        }
+    }
+
+    async function eliminarTodosRegistros() {
+        if (!confirm('⚠️ ¿Eliminar TODOS los registros? Esta acción es irreversible.')) return;
+        try {
+            const url = `${APPS_SCRIPT_URL}?action=clearAll&password=${ADMIN_PASSWORD}`;
+            await fetch(url);
+            await cargarDatosAdmin();
+        } catch(e) {
+            mostrarAlerta('Error al limpiar', 'error', true);
+        }
+    }
+
+    function actualizarSelectParticipantesAdmin() {
+        const select = document.getElementById('selectParticipante');
+        select.innerHTML = '<option value="">-- Seleccione --</option>';
+        datosGlobales.forEach((r, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = `${r.nombre} (${r.edad} años)`;
+            select.appendChild(opt);
+        });
+        document.getElementById('analisisIndividualAdmin').innerHTML = '';
+    }
+
+    function mostrarAnalisisIndividualAdmin() {
+        const idx = document.getElementById('selectParticipante').value;
+        const div = document.getElementById('analisisIndividualAdmin');
+        if (idx === '') {
+            div.innerHTML = '';
+            return;
+        }
+        const r = datosGlobales[parseInt(idx)];
+        if (!r) return;
+        // Reconstruir respuestas
+        const edasResp = [];
+        for (let i=1;i<=18;i++) edasResp.push(r[`EDAS_${i}`]);
+        const phubResp = [];
+        for (let i=1;i<=10;i++) phubResp.push(r[`PHUB_${i}`]);
+        const nivelEDAS = r.nivel_EDAS;
+        const nivelPHUB = r.nivel_PHUB;
+        let interpretacion = '';
+        if (nivelEDAS === 'Alto' && nivelPHUB === 'Alto') interpretacion = 'Puntuaciones elevadas en ambas escalas. Se recomienda evaluación clínica.';
+        else if (nivelEDAS === 'Alto') interpretacion = 'Posible dependencia y adicción al smartphone.';
+        else if (nivelPHUB === 'Alto') interpretacion = 'Fuerte tendencia al phubbing, afecta relaciones.';
+        else if (nivelEDAS === 'Moderado' || nivelPHUB === 'Moderado') interpretacion = 'Nivel moderado de riesgo. Monitorear uso.';
+        else interpretacion = 'Uso normativo del smartphone.';
+        if (r.diagnostico === 'Sí') interpretacion += ' Antecedente de diagnóstico de salud mental.';
+        let html = `<div class="card"><div class="card-header"><h3>${escapeHtml(r.nombre)}</h3></div><div class="card-body">
+        <div class="stats-grid">
+            <div class="stat-card"><h4>Datos</h4><p>Edad: ${r.edad} | Sexo: ${r.sexo}<br>Universidad: ${escapeHtml(r.universidad)}<br>Programa: ${escapeHtml(r.programa)} | Sem: ${r.semestre}<br>Horas uso: ${r.horas_uso}<br>Diagnóstico: ${r.diagnostico}</p></div>
+            <div class="stat-card"><h4>Resultados</h4><p>EDAS-18: <strong>${r.puntaje_EDAS}/90</strong> (${nivelEDAS})<br>Phubbing: <strong>${r.puntaje_PHUB}/50</strong> (${nivelPHUB})<br>Candidato entrevista: ${r.candidato_entrevista}</p></div>
+        </div>
+        <div class="stat-card"><h4>Interpretación</h4><p>${interpretacion}</p></div>
+        <h4>📱 Ítems EDAS-18</h4><div class="item-analysis">`;
+        edasResp.forEach((val, i) => {
+            const barColor = val>=4 ? '#d93025' : (val===3 ? '#f9a825' : '#0d904f');
+            html += `<div class="item-row"><span class="item-num">${i+1}${i===6?'*':''}</span><span class="item-text">${edasItems[i]}</span><span class="item-value">${val}</span><div class="item-bar"><div class="item-bar-fill" style="width:${val*20}%;background:${barColor};"></div></div></div>`;
+        });
+        html += `</div><h4>📵 Ítems Phubbing</h4><div class="item-analysis">`;
+        phubResp.forEach((val, i) => {
+            const barColor = val>=4 ? '#d93025' : (val===3 ? '#f9a825' : '#0d904f');
+            html += `<div class="item-row"><span class="item-num">${i+1}</span><span class="item-text">${phubbingItems[i]}</span><span class="item-value">${val}</span><div class="item-bar"><div class="item-bar-fill" style="width:${val*20}%;background:${barColor};"></div></div></div>`;
+        });
+        html += `</div>${r.candidato_entrevista === 'SÍ' ? '<div class="interview-alert"><h4>📋 ENTREVISTA RECOMENDADA</h4></div>' : ''}</div></div>`;
+        div.innerHTML = html;
+    }
+
+    function exportarExcel() {
+        if (!datosGlobales.length) {
+            mostrarAlerta('No hay datos para exportar', 'error', true);
+            return;
+        }
+        let csv = "Nombre,Edad,Sexo,Universidad,Programa,Semestre,Ciudad,Departamento,Correo,Horas uso,Diagnóstico,EDAS_total,Nivel_EDAS,PHUB_total,Nivel_PHUB,Entrevista\n";
+        datosGlobales.forEach(r => {
+            csv += `"${escapeCsv(r.nombre)}",${r.edad},"${escapeCsv(r.sexo)}","${escapeCsv(r.universidad)}","${escapeCsv(r.programa)}","${r.semestre}","${escapeCsv(r.ciudad)}","${escapeCsv(r.departamento)}","${escapeCsv(r.correo)}","${r.horas_uso}","${r.diagnostico}",${r.puntaje_EDAS},"${r.nivel_EDAS}",${r.puntaje_PHUB},"${r.nivel_PHUB}","${r.candidato_entrevista}"\n`;
+        });
+        const blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8;"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "datos_smartphone.csv";
+        link.click();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    function escapeCsv(str) {
+        if (!str) return '';
+        return str.replace(/"/g, '""');
+    }
+
+    function cambiarPestanaAdmin(pestana) {
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        if (pestana === 'estadisticas') {
+            document.getElementById('adminEstadisticas').classList.add('active');
+            document.querySelector('.tab-btn:first-child').classList.add('active');
+        } else if (pestana === 'individual') {
+            document.getElementById('adminIndividual').classList.add('active');
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        } else if (pestana === 'gestion') {
+            document.getElementById('adminGestion').classList.add('active');
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        }
+    }
+
+    // Control de autenticación y cambio de vista
+    let mostrarAdmin = false;
+    document.getElementById('adminToggleBtn').addEventListener('click', async () => {
+        if (!mostrarAdmin) {
+            const pwd = prompt('Ingrese contraseña de administrador:');
+            if (pwd === ADMIN_PASSWORD) {
+                mostrarAdmin = true;
+                document.getElementById('vistaPublica').style.display = 'none';
+                document.getElementById('vistaAdmin').style.display = 'block';
+                document.getElementById('adminToggleBtn').textContent = '🔓 Cerrar admin';
+                await cargarDatosAdmin();
+            } else {
+                alert('Contraseña incorrecta');
+            }
+        } else {
+            mostrarAdmin = false;
+            document.getElementById('vistaPublica').style.display = 'block';
+            document.getElementById('vistaAdmin').style.display = 'none';
+            document.getElementById('adminToggleBtn').textContent = '🔐 Admin';
+        }
+    });
+</script>
+</body>
+</html>
