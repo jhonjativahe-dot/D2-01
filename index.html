@@ -111,7 +111,6 @@
                 <div class="form-row"><div class="form-group"><label>Programa académico <span class="required">*</span></label><input type="text" id="programa"></div><div class="form-group"><label>Semestre <span class="required">*</span></label><select id="semestre"><option value="">Seleccione...</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option><option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option><option value="9">9°</option><option value="10">10°</option><option value="11+">11° o más</option></select></div></div>
                 <div class="form-row"><div class="form-group"><label>Ciudad de procedencia <span class="required">*</span></label><input type="text" id="ciudad" value="Manizales"></div><div class="form-group"><label>Departamento <span class="required">*</span></label><input type="text" id="departamento" value="Caldas"></div></div>
                 <div class="form-row"><div class="form-group"><label>Correo electrónico <span class="required">*</span></label><input type="email" id="correo"></div><div class="form-group"><label>Horas diarias de uso <span class="required">*</span></label><select id="horas"><option value="">Seleccione...</option><option value="Menos de 1 hora">Menos de 1 hora</option><option value="1 a 3 horas">1 a 3 horas</option><option value="3 a 5 horas">3 a 5 horas</option><option value="5 a 8 horas">5 a 8 horas</option><option value="Más de 8 horas">Más de 8 horas</option></select></div></div>
-                <!-- Eliminada la pregunta de diagnóstico -->
             </div>
         </div>
         <!-- EDAS-18 -->
@@ -148,45 +147,45 @@
 
 <script>
     // ==================== CONFIGURACIÓN ====================
-    // ⚠️ REEMPLAZA ESTA URL CON LA OBTUVISTE EN APPS SCRIPT (PASO 1)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_2O7YFneTE5kMkrpCYZcBJpbcoMbXKsPl3rZP6ljvn-ft2JfRDHcSihg4yJJ7uKe3oQ/exec';  // <--- CAMBIA AQUÍ
+    // ⚠️ REEMPLAZA ESTA URL CON LA DE TU WEB APP DE APPS SCRIPT
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfy.../exec';  // <--- CAMBIA AQUÍ
     const ADMIN_PASSWORD = 'admin123';
 
-    // ==================== DATOS DE LAS ESCALAS ====================
+    // ==================== DATOS DE LAS ESCALAS (versiones oficiales) ====================
     const edasItems = [
         'Siento ansiedad si me quedo sin batería en el móvil.',
-        'Miro aplicaciones del móvil (WhatsApp, Instagram, Facebook, etc.) cada 5 minutos aproximadamente.',
-        'Mi familia, pareja o amigos se han quejado del tiempo que ocupo mirando el móvil.',
-        'Dedico un tiempo excesivo a mirar distintas aplicaciones del móvil.',
+        'Miro alguna de las aplicaciones del móvil (por ejemplo, WhatsApp, Instagram, Facebook, etc.) cada 5 minutos aproximadamente.',
+        'Mi familia, pareja, amigos, se han quejado alguna vez del tiempo que ocupo mirando el móvil.',
+        'Dedico un tiempo excesivo a mirar distintas aplicaciones del móvil (Facebook, Whatsapp, juegos, etc.).',
         'Consulto el móvil constantemente incluso cuando estoy solo/a con otra persona.',
-        'Miro aplicaciones del móvil cada hora aproximadamente.',
+        'Miro alguna de las aplicaciones del móvil (por ejemplo, WhatsApp, Instagram, Facebook, etc.) cada hora aproximadamente.',
         'No dedico más tiempo del necesario a usar las aplicaciones de comunicación y ocio del móvil.',
         'Miro frecuentemente el móvil en clase o en el trabajo.',
         'Soy incapaz de dejar de usar el móvil aunque lo intente.',
         'Dedico gran parte del día a usar las distintas aplicaciones del móvil.',
         'Dedico parte de mi jornada laboral o estudiantil a consultar el móvil.',
-        'Mi principal motivación para una fotografía es compartirla inmediatamente por el móvil.',
-        'El uso del móvil ha interferido con mi desempeño académico y/o laboral.',
-        'De mis actividades diarias, el uso del móvil es a la que dedico más tiempo.',
+        'Mi principal motivación para echar o salir en una fotografía es compartirla inmediatamente a través de cualquier medio del móvil.',
+        'El uso del móvil ha interferido alguna vez con mi desempeño académico y/o laboral.',
+        'De mis actividades diarias, el uso del móvil es al que dedico más tiempo.',
         'Si me despierto durante la noche siempre miro el móvil.',
-        'He intentado disminuir el uso del móvil pero no puedo.',
-        'Soy más desinhibido/a al usar aplicaciones de mensajería que en la vida diaria.',
-        'Suelo usar el móvil en situaciones sociales (bar, comida familiar, etc.).'
+        'He intentado disminuir el uso que hago del móvil pero no puedo.',
+        'Mi comportamiento es más desinhibido cuando uso las aplicaciones de mensajería y redes sociales del móvil que en mi vida diaria.',
+        'Suelo utilizar el móvil cuando estoy en situaciones sociales con varias personas (en un bar con los amigos, en una comida familiar, etc.).'
     ];
     const phubbingItems = [
-        'Estoy pendiente del móvil cuando estoy en compañía de otras personas.',
-        'Estoy ocupado/a con el móvil cuando estoy con mis amigos/as.',
-        'Otras personas se quejan sobre mi uso del móvil.',
-        'Estoy ocupado/a con el móvil cuando estoy con mis familiares.',
-        'A mi pareja le molesta que esté ocupado/a con el móvil (o familiares).',
-        'Mi móvil está siempre a mi alcance.',
-        'Lo primero al despertarme es mirar mis mensajes en el móvil.',
+        'Estoy pendiente de mi teléfono móvil cuando estoy en compañía de otras personas.',
+        'Estoy ocupado/a con mi teléfono móvil cuando estoy con mis amigos/as.',
+        'Otras personas se quejan sobre mi uso del teléfono móvil.',
+        'Estoy ocupado/a con mi móvil cuando estoy con mis familiares.',
+        'A mi pareja le molesta que esté ocupado/a con el móvil (o familiares, si no tienes pareja).',
+        'Mi teléfono móvil está siempre a mi alcance.',
+        'Lo primero que hago al despertarme es mirar mis mensajes en el móvil.',
         'Me siento vacío/a sin mi móvil.',
-        'Cada día aumenta mi uso del móvil.',
-        'El tiempo para actividades sociales/personales se reduce por usar el móvil.'
+        'Cada día aumenta mi uso del teléfono móvil.',
+        'El tiempo que dedico a actividades sociales, personales o profesionales se reduce por el tiempo que uso el móvil.'
     ];
 
-    // Construir las tablas de preguntas dinámicamente
+    // Construir tablas dinámicamente
     function buildMatrix(tbodyId, items, prefix) {
         const tbody = document.getElementById(tbodyId);
         if (!tbody) return;
@@ -223,7 +222,6 @@
         document.getElementById('consentBox').classList.toggle('checked', cb.checked);
     });
 
-    // Funciones auxiliares
     function getRadioVal(name) {
         const r = document.querySelector(`input[name="${name}"]:checked`);
         return r ? parseInt(r.value) : null;
@@ -245,7 +243,6 @@
         const correo = document.getElementById('correo').value.trim();
         if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('Correo válido');
         if (!document.getElementById('horas').value) errores.push('Horas de uso');
-        // Validación de escalas
         for (let i=1;i<=18;i++) if (!getRadioVal('EDAS_'+i)) errores.push(`EDAS ítem ${i}`);
         for (let i=1;i<=10;i++) if (!getRadioVal('PHUB_'+i)) errores.push(`Phubbing ítem ${i}`);
         if (!document.getElementById('consentCheckbox').checked) errores.push('Consentimiento');
@@ -285,7 +282,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            mostrarAlerta('✅ Respuesta guardada correctamente', 'success');
+            // Mensaje de éxito personalizado y amigable
+            mostrarAlerta('¡Test enviado con éxito! Muchas gracias por tu participación.', 'success');
             resetFormulario();
         } catch(error) {
             mostrarAlerta('❌ Error al guardar: ' + error.message, 'error');
@@ -443,7 +441,6 @@
         }
         const r = datosGlobales[parseInt(idx)];
         if (!r) return;
-        // Reconstruir respuestas
         const edasResp = [];
         for (let i=1;i<=18;i++) edasResp.push(r[`EDAS_${i}`]);
         const phubResp = [];
@@ -456,7 +453,6 @@
         else if (nivelPHUB === 'Alto') interpretacion = 'Fuerte tendencia al phubbing, afecta relaciones.';
         else if (nivelEDAS === 'Moderado' || nivelPHUB === 'Moderado') interpretacion = 'Nivel moderado de riesgo. Monitorear uso.';
         else interpretacion = 'Uso normativo del smartphone.';
-        // Nota: ya no mostramos diagnóstico
         let html = `<div class="card"><div class="card-header"><h3>${escapeHtml(r.nombre)}</h3></div><div class="card-body">
         <div class="stats-grid">
             <div class="stat-card"><h4>Datos</h4><p>Edad: ${r.edad} | Sexo: ${r.sexo}<br>Universidad: ${escapeHtml(r.universidad)}<br>Programa: ${escapeHtml(r.programa)} | Sem: ${r.semestre}<br>Horas uso: ${r.horas_uso}</p></div>
