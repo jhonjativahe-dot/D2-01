@@ -50,15 +50,35 @@
         .consent-box { background:#f9fafb; border:1.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; display:flex; align-items:flex-start; gap:10px; cursor:pointer; }
         .consent-box.checked { border-color:var(--primary); background:var(--primary-light); }
         .consent-box input[type="checkbox"] { width:19px; height:19px; accent-color:var(--primary); margin-top:2px; }
-        .btn-row { display:flex; justify-content:center; gap:10px; margin-top:16px; }
+        .btn-row { display:flex; justify-content:center; gap:10px; margin-top:16px; flex-wrap:wrap; }
         .btn { padding:11px 28px; font-size:0.9rem; font-weight:600; border:none; border-radius:6px; cursor:pointer; }
         .btn-primary { background:var(--primary); color:#fff; }
         .btn-primary:hover { background:var(--primary-dark); }
         .btn-secondary { background:#fff; color:var(--primary); border:1.5px solid var(--border); }
         .btn-danger { background:#fff; color:var(--error); border:1.5px solid var(--error); }
-        .alert { padding:12px 16px; border-radius:6px; margin-bottom:12px; display:none; font-weight:500; }
-        .alert-success { background:var(--success-bg); color:#1a5c2a; display:block; border-left:4px solid var(--success); }
-        .alert-error { background:var(--error-bg); color:#a50e0e; display:block; border-left:4px solid var(--error); }
+        /* Alertas debajo del botón */
+        .mensaje-envio {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+        }
+        .mensaje-envio.success {
+            background: var(--success-bg);
+            color: #1a5c2a;
+            border-left: 4px solid var(--success);
+            display: block;
+        }
+        .mensaje-envio.error {
+            background: var(--error-bg);
+            color: #a50e0e;
+            border-left: 4px solid var(--error);
+            display: block;
+        }
+        /* Ocultar alerta original que estaba arriba */
+        #globalAlert { display: none !important; }
         .hidden-field { display: none; }
         .hidden-field.visible { display: flex; }
         .tab-nav { display:flex; gap:4px; background:#e8ecf1; border-radius:20px; padding:4px; margin-bottom:20px; }
@@ -100,7 +120,8 @@
 <main class="container">
     <!-- Vista pública (formulario) -->
     <div id="vistaPublica">
-        <div id="globalAlert" class="alert"></div>
+        <!-- Antigua alerta global la ocultamos -->
+        <div id="globalAlert" class="alert" style="display:none;"></div>
         <!-- Datos Sociodemográficos -->
         <div class="card">
             <div class="card-header"><div class="card-number">1</div><h2>Datos Sociodemográficos</h2></div>
@@ -128,7 +149,12 @@
             <div class="card-header"><div class="card-number">4</div><h2>Consentimiento Informado</h2></div>
             <div class="card-body"><div class="consent-box" id="consentBox"><input type="checkbox" id="consentCheckbox"><label><strong>* Declaro que soy mayor de edad y acepto participar voluntariamente.</strong><br>Autorizo el uso anónimo de mis respuestas con fines académicos.</label></div></div>
         </div>
-        <div class="btn-row"><button class="btn btn-secondary" onclick="resetFormulario()">Limpiar</button><button class="btn btn-primary" onclick="enviarRespuesta()">Enviar</button></div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" onclick="resetFormulario()">Limpiar</button>
+            <button class="btn btn-primary" onclick="enviarRespuesta()">Enviar</button>
+        </div>
+        <!-- Nuevo contenedor para mensajes de éxito/error debajo del botón -->
+        <div id="mensajeEnvio" class="mensaje-envio"></div>
     </div>
 
     <!-- Vista Admin (oculta al inicio) -->
@@ -229,7 +255,6 @@
 
     function validarFormulario() {
         let errores = [];
-        // Validación de campos sociodemográficos con mensajes más claros
         if (!document.getElementById('nombre').value.trim()) errores.push('• Nombre completo');
         const edad = parseInt(document.getElementById('edad').value);
         if (isNaN(edad) || edad < 14 || edad > 99) errores.push('• Edad (debe ser entre 14 y 99 años)');
@@ -244,8 +269,8 @@
         const correo = document.getElementById('correo').value.trim();
         if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('• Correo electrónico válido');
         if (!document.getElementById('horas').value) errores.push('• Horas diarias de uso');
-        // Validación escalas
-        for (let i=1;i<=18;i++) if (!getRadioVal('EDAS_'+i)) { errores.push(`• EDAS-18: ítem ${i}`); break; } // solo mostramos el primero para no abrumar
+        // Validación escalas: solo mostramos el primer ítem faltante de cada escala
+        for (let i=1;i<=18;i++) if (!getRadioVal('EDAS_'+i)) { errores.push(`• EDAS-18: ítem ${i}`); break; }
         for (let i=1;i<=10;i++) if (!getRadioVal('PHUB_'+i)) { errores.push(`• Phubbing: ítem ${i}`); break; }
         if (!document.getElementById('consentCheckbox').checked) errores.push('• Aceptar el consentimiento informado');
         return { ok: errores.length === 0, errores };
@@ -254,11 +279,10 @@
     async function enviarRespuesta() {
         const valid = validarFormulario();
         if (!valid.ok) {
-            // Mensaje amigable de error
             let mensajeError = "❌ No se pudo enviar el test. Por favor completa los siguientes campos:\n\n";
             mensajeError += valid.errores.join('\n');
             mensajeError += "\n\n✅ Revisa y vuelve a intentarlo.";
-            mostrarAlerta(mensajeError, 'error');
+            mostrarMensaje(mensajeError, 'error');
             return;
         }
         const edasResp = [];
@@ -282,31 +306,33 @@
             phubbingResp: phubbingResp
         };
         try {
-            // Envío a Google Apps Script
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            // Mensaje de éxito claro y agradable
-            mostrarAlerta('✅ ¡Test enviado con éxito! Muchas gracias por tu participación.\n\nTus respuestas han sido registradas.', 'success');
-            // Pequeño retraso antes de resetear para que el usuario alcance a leer
+            mostrarMensaje('✅ ¡Test enviado con éxito! Muchas gracias por tu participación.\n\nTus respuestas han sido registradas.', 'success');
             setTimeout(() => {
                 resetFormulario();
             }, 2000);
         } catch(error) {
-            mostrarAlerta('❌ Error de conexión. Por favor verifica tu internet e intenta nuevamente.\n\nDetalle: ' + error.message, 'error');
+            mostrarMensaje('❌ Error de conexión. Por favor verifica tu internet e intenta nuevamente.\n\nDetalle: ' + error.message, 'error');
         }
     }
 
-    function mostrarAlerta(msg, tipo, admin=false) {
-        const div = admin ? document.getElementById('adminAlert') : document.getElementById('globalAlert');
-        div.textContent = msg;
-        div.className = `alert alert-${tipo}`;
-        div.style.display = 'block';
-        // La alerta permanecerá 5 segundos (o más para errores)
-        setTimeout(() => { div.style.display = 'none'; }, 6000);
+    function mostrarMensaje(msg, tipo) {
+        const contenedor = document.getElementById('mensajeEnvio');
+        contenedor.textContent = msg;
+        contenedor.className = `mensaje-envio ${tipo}`;
+        // Auto-ocultar después de 6 segundos
+        setTimeout(() => {
+            contenedor.style.display = 'none';
+            // Para que vuelva a mostrarse en próximos envíos, reseteamos la clase pero dejamos display none
+            contenedor.className = 'mensaje-envio';
+            contenedor.style.display = 'none';
+        }, 6000);
+        contenedor.style.display = 'block';
     }
 
     function resetFormulario() {
@@ -319,11 +345,13 @@
         document.getElementById('departamento').value = 'Caldas';
         document.getElementById('rowOtraUniversidad').classList.remove('visible');
         document.getElementById('otraUniversidad').value = '';
-        // Limpiar alertas por si acaso
-        document.getElementById('globalAlert').style.display = 'none';
+        // Limpiar mensaje de envío
+        const contenedor = document.getElementById('mensajeEnvio');
+        contenedor.style.display = 'none';
+        contenedor.className = 'mensaje-envio';
     }
 
-    // ==================== PANEL DE ADMINISTRACIÓN (sin cambios relevantes) ====================
+    // ==================== PANEL DE ADMINISTRACIÓN (sin cambios) ====================
     let datosGlobales = [];
 
     async function cargarDatosAdmin() {
@@ -337,11 +365,19 @@
                 actualizarTablaRegistrosAdmin();
                 actualizarSelectParticipantesAdmin();
             } else {
-                mostrarAlerta('Error al cargar datos', 'error', true);
+                mostrarAlertaAdmin('Error al cargar datos', 'error');
             }
         } catch(e) {
-            mostrarAlerta('Error de red: ' + e.message, 'error', true);
+            mostrarAlertaAdmin('Error de red: ' + e.message, 'error');
         }
+    }
+
+    function mostrarAlertaAdmin(msg, tipo) {
+        const div = document.getElementById('adminAlert');
+        div.textContent = msg;
+        div.className = `alert alert-${tipo}`;
+        div.style.display = 'block';
+        setTimeout(() => { div.style.display = 'none'; }, 5000);
     }
 
     function actualizarEstadisticasAdmin() {
@@ -418,7 +454,7 @@
             await fetch(url);
             await cargarDatosAdmin();
         } catch(e) {
-            mostrarAlerta('Error al eliminar', 'error', true);
+            mostrarAlertaAdmin('Error al eliminar', 'error');
         }
     }
 
@@ -429,7 +465,7 @@
             await fetch(url);
             await cargarDatosAdmin();
         } catch(e) {
-            mostrarAlerta('Error al limpiar', 'error', true);
+            mostrarAlertaAdmin('Error al limpiar', 'error');
         }
     }
 
@@ -488,7 +524,7 @@
 
     function exportarExcel() {
         if (!datosGlobales.length) {
-            mostrarAlerta('No hay datos para exportar', 'error', true);
+            mostrarAlertaAdmin('No hay datos para exportar', 'error');
             return;
         }
         let csv = "Nombre,Edad,Sexo,Universidad,Programa,Semestre,Ciudad,Departamento,Correo,Horas uso,EDAS_total,Nivel_EDAS,PHUB_total,Nivel_PHUB,Entrevista\n";
