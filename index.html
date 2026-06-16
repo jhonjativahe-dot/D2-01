@@ -1,988 +1,1029 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluación de Adicción al Smartphone</title>
-    <style>
-        :root {
-            --bg: #f0f4f9;
-            --card-bg: #ffffff;
-            --primary: #1a73e8;
-            --primary-dark: #1557b0;
-            --primary-light: #e8f0fe;
-            --text: #202124;
-            --text-secondary: #5f6368;
-            --border: #dadce0;
-            --error: #d93025;
-            --error-bg: #fce8e6;
-            --success: #0d904f;
-            --success-bg: #e6f4ea;
-            --shadow: 0 1px 3px rgba(0,0,0,0.08);
-            --radius: 8px;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); line-height:1.6; padding-bottom:40px; }
-        .header { background:var(--card-bg); border-bottom:1px solid var(--border); padding:14px 0; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); }
-        .header-inner { max-width:950px; margin:0 auto; padding:0 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-        .header-icon { width:38px; height:38px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; }
-        .header-icon svg { width:20px; height:20px; fill:#fff; }
-        .header h1 { font-size:1.2rem; font-weight:600; }
-        .admin-btn { background:var(--primary-light); color:var(--primary); border:1px solid var(--primary); border-radius:20px; padding:6px 14px; cursor:pointer; font-size:0.8rem; font-weight:500; margin-left:auto; transition:0.2s; }
-        .admin-btn:hover { background:var(--primary); color:#fff; }
-        .container { max-width:950px; margin:0 auto; padding:20px; }
-        .card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); padding:24px 28px; margin-bottom:18px; }
-        .card-header { margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-        .card-number { width:30px; height:30px; border-radius:50%; background:var(--primary); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; }
-        .card-header h2 { font-size:1.1rem; font-weight:600; }
-        .form-row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:14px; }
-        .form-group { display:flex; flex-direction:column; gap:5px; flex:1 1 200px; }
-        .form-group label { font-size:0.84rem; font-weight:500; }
-        .required { color:var(--error); }
-        .form-group input, .form-group select { padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-family:inherit; width:100%; }
-        .radio-group { display:flex; gap:18px; margin-top:4px; }
-        .radio-group label { display:flex; align-items:center; gap:6px; cursor:pointer; }
-        .matrix-wrapper { overflow-x:auto; }
-        .matrix-table { width:100%; border-collapse:collapse; min-width:600px; font-size:0.82rem; }
-        .matrix-table th, .matrix-table td { padding:8px 6px; text-align:center; border-bottom:1px solid #f0f0f0; }
-        .col-question { text-align:left; width:38%; }
-        .matrix-table input[type="radio"] { accent-color:var(--primary); width:16px; height:16px; cursor:pointer; }
-        .consent-box { background:#f9fafb; border:1.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; display:flex; align-items:flex-start; gap:10px; cursor:pointer; }
-        .consent-box.checked { border-color:var(--primary); background:var(--primary-light); }
-        .consent-box input[type="checkbox"] { width:19px; height:19px; accent-color:var(--primary); margin-top:2px; }
-        .btn-row { display:flex; justify-content:center; gap:10px; margin-top:16px; flex-wrap:wrap; }
-        .btn { padding:11px 28px; font-size:0.9rem; font-weight:600; border:none; border-radius:6px; cursor:pointer; font-family:inherit; transition:0.2s; }
-        .btn-primary { background:var(--primary); color:#fff; }
-        .btn-primary:hover { background:var(--primary-dark); }
-        .btn-secondary { background:#fff; color:var(--primary); border:1.5px solid var(--border); }
-        .btn-danger { background:#fff; color:var(--error); border:1.5px solid var(--error); }
-        .btn-danger:hover { background:#fef2f2; }
-        #globalAlert { display:none !important; }
-        .hidden-field { display: none; }
-        .hidden-field.visible { display: flex; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Evaluación de Adicción al Smartphone</title>
+<style>
+/* ═══════════════════════════════════════════
+   VARIABLES Y RESET
+═══════════════════════════════════════════ */
+:root {
+  --bg:#f0f4f9; --card:#fff; --primary:#1a73e8; --pdark:#1557b0;
+  --plight:#e8f0fe; --text:#202124; --t2:#5f6368; --border:#dadce0;
+  --err:#d93025; --err-bg:#fce8e6; --ok:#0d904f; --ok-bg:#e6f4ea;
+  --warn:#e65100; --warn-bg:#fff3e0;
+  --sh:0 2px 10px rgba(0,0,0,.10); --r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding-bottom:48px;font-size:15px}
 
-        /* ── MENSAJE DE ENVÍO (éxito / error) ────────────────── */
-        .mensaje-envio {
-            display: none;
-            margin-top: 24px;
-            border-radius: 12px;
-            overflow: hidden;
-            font-size: 0.92rem;
-        }
-        /* — ÉXITO — */
-        .mensaje-envio.success {
-            display: block;
-            background: linear-gradient(135deg, #e6f4ea 0%, #f0faf4 100%);
-            border: 1.5px solid #81c995;
-            box-shadow: 0 4px 16px rgba(13,144,79,0.12);
-        }
-        .mensaje-envio.success .msj-top {
-            background: var(--success);
-            color: #fff;
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .mensaje-envio.success .msj-top .msj-icon {
-            font-size: 1.8rem;
-            line-height: 1;
-        }
-        .mensaje-envio.success .msj-top .msj-titulo {
-            font-size: 1.05rem;
-            font-weight: 700;
-        }
-        .mensaje-envio.success .msj-top .msj-subtitulo {
-            font-size: 0.8rem;
-            opacity: 0.88;
-            margin-top: 2px;
-        }
-        .mensaje-envio.success .msj-body {
-            padding: 14px 20px;
-            color: #1a5c2a;
-            line-height: 1.7;
-        }
-        .mensaje-envio.success .msj-body p { margin-bottom: 4px; }
-        .mensaje-envio.success .msj-body strong { color: var(--success); }
+/* ── HEADER ── */
+.hdr{background:var(--primary);padding:14px 0;position:sticky;top:0;z-index:200;box-shadow:0 3px 14px rgba(26,115,232,.3)}
+.hdr-in{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:12px}
+.hdr-ico{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-ico svg{width:22px;height:22px;fill:#fff}
+.hdr h1{font-size:1rem;font-weight:700;color:#fff;flex:1;line-height:1.3}
+.hdr h1 small{display:block;font-size:.68rem;font-weight:400;opacity:.82;margin-top:1px}
+.adm-btn{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.5);
+  border-radius:20px;padding:7px 16px;cursor:pointer;font-size:.78rem;font-weight:700;
+  white-space:nowrap;transition:.2s;font-family:inherit}
+.adm-btn:hover{background:rgba(255,255,255,.32)}
 
-        /* — ERROR DE VALIDACIÓN — */
-        .mensaje-envio.error {
-            display: block;
-            background: #fffbfb;
-            border: 1.5px solid #f5b7b1;
-            border-radius: 10px;
-            box-shadow: 0 4px 14px rgba(217,48,37,0.10);
-        }
-        .mensaje-envio.error .msj-top {
-            background: var(--error);
-            color: #fff;
-            padding: 12px 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .mensaje-envio.error .msj-top .msj-icon { font-size: 1.4rem; }
-        .mensaje-envio.error .msj-top .msj-titulo { font-size: 0.97rem; font-weight: 700; }
-        .mensaje-envio.error .msj-body {
-            padding: 12px 18px 14px;
-            color: #7f1a14;
-        }
-        .mensaje-envio.error .msj-body .error-intro {
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 0.88rem;
-        }
-        .mensaje-envio.error .msj-body ul {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 10px;
-        }
-        .mensaje-envio.error .msj-body ul li {
-            padding: 5px 0 5px 22px;
-            border-bottom: 1px solid #fce8e6;
-            font-size: 0.85rem;
-            position: relative;
-        }
-        .mensaje-envio.error .msj-body ul li::before {
-            content: "▸";
-            position: absolute;
-            left: 6px;
-            color: var(--error);
-        }
-        .mensaje-envio.error .msj-body .error-footer {
-            font-size: 0.82rem;
-            color: #a50e0e;
-            font-style: italic;
-        }
+/* ── CONTENEDOR ── */
+.wrap{max-width:960px;margin:0 auto;padding:18px 14px}
 
-        /* ── PANEL ADMIN ─────────────────────────────────────── */
-        .admin-section { display:none; }
-        .admin-section.active { display:block; }
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);
+  padding:20px 22px;margin-bottom:16px;border:1px solid rgba(0,0,0,.05)}
+.card-hdr{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:12px}
+.card-num{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;
+  font-weight:800;font-size:.88rem;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;box-shadow:0 2px 6px rgba(26,115,232,.35)}
+.card-hdr h2{font-size:.97rem;font-weight:700;margin-top:3px}
+.card-hdr small{display:block;font-size:.7rem;color:var(--t2);font-weight:400;margin-top:2px}
 
-        /* Barra de pestañas admin */
-        .tab-nav {
-            display: flex;
-            gap: 0;
-            background: #fff;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 20px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 14px 10px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.84rem;
-            font-family: inherit;
-            color: var(--text-secondary);
-            border-right: 1px solid var(--border);
-            transition: 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            line-height: 1.3;
-        }
-        .tab-btn:last-child { border-right: none; }
-        .tab-btn .tab-icon { font-size: 1.4rem; }
-        .tab-btn .tab-label { font-size: 0.78rem; }
-        .tab-btn:hover:not(.active) { background: #f8f9fb; color: var(--text); }
-        .tab-btn.active {
-            background: var(--primary);
-            color: #fff;
-        }
-        /* Separador visual entre secciones admin */
-        .admin-section-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 20px;
-            background: var(--primary);
-            color: #fff;
-            border-radius: var(--radius) var(--radius) 0 0;
-            margin-bottom: 0;
-        }
-        .admin-section-header h3 {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        .admin-section-header .sec-icon {
-            font-size: 1.3rem;
-        }
-        .admin-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 18px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-        .admin-card-body {
-            padding: 20px 24px;
-        }
+/* ── FORM ── */
+.frow{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1 1 200px}
+.fg label{font-size:.8rem;font-weight:600;color:var(--t2)}
+.req{color:var(--err)}
+.fg input,.fg select{
+  padding:12px 14px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:inherit;font-size:.9rem;width:100%;background:#fafbfc;
+  transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,115,232,.13)}
+.hf{display:none}.hf.vis{display:flex}
 
-        /* Colores de cabecera por sección */
-        .admin-section-header.color-stats   { background: #1a73e8; }
-        .admin-section-header.color-indiv   { background: #0d904f; }
-        .admin-section-header.color-gestion { background: #c5221f; }
+/* ── ESCALAS — DISEÑO TIPO TARJETA VERTICAL (igual en móvil y desktop) ── */
+.esc-nota{
+  font-size:.75rem;font-weight:600;color:var(--t2);background:var(--plight);
+  padding:9px 13px;border-radius:8px;border-left:3px solid var(--primary);
+  margin-bottom:14px;line-height:1.6}
+.esc-item{
+  background:#fafbfd;border:1.5px solid #e8ecf5;border-radius:10px;
+  padding:14px 16px;margin-bottom:10px;transition:.2s}
+.esc-item:hover{border-color:#c5d8f8;background:#f4f8ff}
+.esc-item.respondido{border-color:#81c995;background:#f4fbf6}
+.esc-txt{font-size:.84rem;line-height:1.5;margin-bottom:12px;font-weight:500}
+.esc-opciones{display:flex;justify-content:space-between;gap:6px}
+.esc-opcion{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
+.esc-opcion input[type="radio"]{display:none}
+.esc-opcion .esc-circulo{
+  width:38px;height:38px;border-radius:50%;border:2px solid #d0d9e8;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:700;color:var(--t2);background:#fff;
+  transition:.2s;cursor:pointer}
+.esc-opcion .esc-circulo:hover{border-color:var(--primary);background:var(--plight);color:var(--primary)}
+.esc-opcion input[type="radio"]:checked + .esc-circulo{
+  background:var(--primary);border-color:var(--primary);color:#fff;
+  box-shadow:0 3px 10px rgba(26,115,232,.4);transform:scale(1.12)}
+.esc-opcion .esc-etq{font-size:.6rem;font-weight:600;color:var(--t2);text-align:center;line-height:1.2;max-width:42px}
 
-        .tab-btn.active.tab-stats   { background: #1a73e8; }
-        .tab-btn.active.tab-indiv   { background: #0d904f; }
-        .tab-btn.active.tab-gestion { background: #c5221f; }
+/* ── CONSENTIMIENTO ── */
+.cons{background:#f9fafb;border:2px solid var(--border);border-radius:11px;
+  padding:16px 18px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:.2s}
+.cons:hover{border-color:#b0c4e8;background:#f0f4fc}
+.cons.ok{border-color:var(--primary);background:var(--plight)}
+.cons input[type="checkbox"]{width:20px;height:20px;accent-color:var(--primary);cursor:pointer;flex-shrink:0;margin-top:3px}
+.cons label{font-size:.84rem;cursor:pointer;line-height:1.55}
 
-        .data-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
-        .data-table th { background:#f1f3f4; padding:8px; text-align:left; }
-        .data-table td { padding:8px; border-bottom:1px solid #eee; vertical-align:middle; }
-        .btn-sm { padding:5px 12px; font-size:0.75rem; border-radius:4px; cursor:pointer; border:1px solid #ccc; background:#fff; font-family:inherit; }
-        .btn-sm:hover { background:#fee; border-color:var(--error); color:var(--error); }
-        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:16px; }
-        .stat-card { background:#f8f9fb; border-radius:6px; padding:14px; border:1px solid #e8ecf1; }
-        .stat-card h4 { font-size:0.78rem; font-weight:600; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px; }
-        .progress-bar { height:8px; background:#e0e0e0; border-radius:4px; overflow:hidden; margin:6px 0; }
-        .progress-fill { height:100%; border-radius:4px; }
-        .fill-low { background:#0d904f; }
-        .fill-moderate { background:#f9a825; }
-        .fill-high { background:#d93025; }
-        .interview-alert { background:#fff3e0; border:2px solid #e65100; border-radius:8px; padding:16px 20px; text-align:center; margin-top:10px; }
-        .individual-select { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
-        .individual-select select { padding:10px 14px; border-radius:6px; border:1.5px solid var(--border); min-width:250px; font-family:inherit; }
-        .item-analysis { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-        .item-row { display:flex; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #f0f0f0; }
-        .item-num { width:30px; font-weight:600; font-size:0.8rem; }
-        .item-text { flex:1; font-size:0.8rem; }
-        .item-value { width:36px; text-align:center; font-weight:700; }
-        .item-bar { width:110px; height:8px; background:#e0e0e0; border-radius:4px; overflow:hidden; }
-        .item-bar-fill { height:100%; }
+/* ── BOTONES ── */
+.btn-row{display:flex;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+.btn{padding:14px 36px;font-size:.95rem;font-weight:800;border:none;border-radius:11px;
+  cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:.01em;min-width:160px}
+.btn-p{
+  background:linear-gradient(135deg,var(--primary),var(--pdark));color:#fff;
+  box-shadow:0 4px 14px rgba(26,115,232,.38)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(26,115,232,.46)}
+.btn-p:disabled{background:linear-gradient(135deg,#9ebff8,#7da8f0);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-s{background:#fff;color:var(--primary);border:2px solid var(--border)}
+.btn-s:hover{border-color:var(--primary);background:var(--plight)}
+.btn-d{background:#fff;color:var(--err);border:2px solid var(--err);border-radius:9px}
+.btn-d:hover{background:#fef2f2}
 
-        /* Alerta admin */
-        .alert { padding:10px 14px; border-radius:6px; font-size:0.84rem; font-weight:500; margin-bottom:12px; display:none; }
-        .alert-success { background:var(--success-bg); color:#1a5c2a; display:block; }
-        .alert-error   { background:var(--error-bg); color:#a50e0e; display:block; }
+/* ── SPINNER BOTÓN ── */
+.enviando-wrap{display:inline-flex;align-items:center;gap:10px;justify-content:center}
+.enviando-spin{width:19px;height:19px;border:2.5px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;animation:giro .7s linear infinite;flex-shrink:0}
+.enviando-pts{font-size:.95rem;font-weight:800}
+@keyframes giro{to{transform:rotate(360deg)}}
+@keyframes puntos{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+.enviando-pts::after{content:'.';animation:puntos 1.2s steps(3,end) infinite}
 
-        /* Badge nivel */
-        .badge { padding:2px 8px; border-radius:12px; font-size:0.72rem; font-weight:600; }
-        .badge-bajo { background:#e6f4ea; color:#0d904f; }
-        .badge-moderado { background:#fff3e0; color:#e65100; }
-        .badge-alto { background:#fce8e6; color:#c5221f; }
+/* ═══════════════════════════════════════════
+   MENSAJE DE RESULTADO (éxito / error)
+═══════════════════════════════════════════ */
+#msgBox{display:none;margin-top:24px;border-radius:16px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.13)}
 
-        @media (max-width:700px) {
-            .card { padding:16px 12px; }
-            .matrix-table { min-width:500px; }
-            .tab-btn { font-size:0.72rem; padding:10px 6px; }
-        }
-    </style>
+/* ÉXITO */
+#msgBox.ok{display:block}
+#msgBox.ok .mb-top{
+  background:linear-gradient(135deg,#0b8044 0%,#0d904f 100%);
+  padding:22px 22px 20px;display:flex;align-items:flex-start;gap:16px}
+#msgBox.ok .mb-ico-wrap{
+  background:rgba(255,255,255,.22);border-radius:50%;
+  width:56px;height:56px;min-width:56px;
+  display:flex;align-items:center;justify-content:center;font-size:1.9rem}
+#msgBox.ok .mb-titulo{font-size:1.1rem;font-weight:800;color:#fff;line-height:1.3}
+#msgBox.ok .mb-sub{font-size:.78rem;color:rgba(255,255,255,.85);margin-top:4px;line-height:1.4}
+#msgBox.ok .mb-body{
+  background:linear-gradient(135deg,#e7f6ed 0%,#f5fdf8 100%);
+  padding:18px 22px}
+#msgBox.ok .mb-linea{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 0;border-bottom:1px solid rgba(13,144,79,.12);
+  font-size:.86rem;color:#1a4a2e;line-height:1.5}
+#msgBox.ok .mb-linea:last-child{border-bottom:none}
+#msgBox.ok .mb-linea .ml-ico{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+#msgBox.ok .mb-linea strong{color:#0a6e35}
+#msgBox.ok .mb-pie{
+  background:#0d904f;padding:9px 22px;text-align:center;
+  font-size:.73rem;color:rgba(255,255,255,.78);font-style:italic}
+
+/* ERROR */
+#msgBox.err{display:block}
+#msgBox.err .mb-top{
+  background:linear-gradient(135deg,#b91c1c 0%,#d93025 100%);
+  padding:16px 20px;display:flex;align-items:center;gap:14px}
+#msgBox.err .mb-ico-wrap{
+  background:rgba(255,255,255,.22);border-radius:50%;
+  width:46px;height:46px;min-width:46px;
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+#msgBox.err .mb-titulo{font-size:.97rem;font-weight:800;color:#fff;line-height:1.3}
+#msgBox.err .mb-sub{font-size:.76rem;color:rgba(255,255,255,.82);margin-top:3px}
+#msgBox.err .mb-body{background:#fffbfb;padding:14px 20px 16px}
+#msgBox.err .mb-body .err-intro{font-weight:700;font-size:.84rem;color:#7f1a14;margin-bottom:10px}
+#msgBox.err .mb-body ul{list-style:none;padding:0;margin:0 0 10px}
+#msgBox.err .mb-body ul li{
+  padding:7px 6px 7px 26px;border-bottom:1px solid #fce8e6;
+  font-size:.83rem;color:#6b1610;position:relative}
+#msgBox.err .mb-body ul li:last-child{border-bottom:none}
+#msgBox.err .mb-body ul li::before{content:"▸";position:absolute;left:8px;color:#d93025;font-weight:700}
+#msgBox.err .mb-pie{font-size:.78rem;color:#a50e0e;font-style:italic;margin-top:8px}
+
+#globalAlert{display:none!important}
+.hf{display:none}.hf.vis{display:flex}
+
+/* ═══════════════════════════════════════════
+   PANEL ADMIN — PESTAÑAS
+═══════════════════════════════════════════ */
+.adm-sec{display:none}
+.adm-sec.activa{display:block}
+
+.tab-nav{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:10px;margin-bottom:20px}
+.tab-btn{
+  border:2px solid var(--border);border-radius:13px;
+  background:#fff;color:var(--t2);
+  cursor:pointer;font-family:inherit;font-weight:700;
+  padding:16px 10px 14px;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  box-shadow:0 2px 6px rgba(0,0,0,.07);transition:all .2s}
+.tab-btn .ti{font-size:1.8rem;line-height:1}
+.tab-btn .tl{font-size:.72rem;text-align:center;line-height:1.3}
+.tab-btn:hover:not(.act){background:#f4f7fd;border-color:#b0c4e8;color:var(--text);transform:translateY(-1px)}
+.tab-btn.act.ts{background:linear-gradient(135deg,#1a73e8,#1254c0);color:#fff;border-color:#1a73e8;box-shadow:0 4px 14px rgba(26,115,232,.4)}
+.tab-btn.act.ti2{background:linear-gradient(135deg,#0d904f,#0a7a42);color:#fff;border-color:#0d904f;box-shadow:0 4px 14px rgba(13,144,79,.4)}
+.tab-btn.act.tg{background:linear-gradient(135deg,#c5221f,#a50e0e);color:#fff;border-color:#c5221f;box-shadow:0 4px 14px rgba(197,34,31,.4)}
+
+.adm-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);
+  margin-bottom:18px;overflow:hidden;border:1px solid rgba(0,0,0,.06)}
+.adm-hdr{display:flex;align-items:center;gap:13px;padding:17px 22px;color:#fff}
+.adm-hdr.cs{background:linear-gradient(135deg,#1a73e8,#1254c0)}
+.adm-hdr.ci{background:linear-gradient(135deg,#0d904f,#0a7a42)}
+.adm-hdr.cg{background:linear-gradient(135deg,#c5221f,#a50e0e)}
+.adm-hdr .si{font-size:1.7rem}
+.adm-hdr h3{font-size:1rem;font-weight:700}
+.adm-hdr p{font-size:.73rem;opacity:.85;margin-top:2px}
+.adm-body{padding:20px 22px}
+
+/* Stats */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px}
+.sc{background:#f8f9fb;border-radius:10px;padding:16px;border:1px solid #e8ecf1}
+.sc h4{font-size:.7rem;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.sc .sv{font-size:2.2rem;font-weight:800;color:var(--primary);line-height:1.1}
+.sc .ss{font-size:.73rem;color:var(--t2);margin-top:2px}
+.pb{height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;margin:5px 0}
+.pf{height:100%;border-radius:4px}
+.fl{background:#0d904f}.fm{background:#f9a825}.fh{background:#d93025}
+
+/* Tabla */
+.dtable{width:100%;border-collapse:collapse;font-size:.78rem}
+.dtable th{background:#f1f3f4;padding:9px 10px;text-align:left;font-weight:700;font-size:.72rem;white-space:nowrap;border-bottom:2px solid var(--border)}
+.dtable td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+.dtable tr:hover td{background:#fafbff}
+.bs{padding:5px 10px;font-size:.73rem;border-radius:6px;cursor:pointer;border:1.5px solid #ccc;background:#fff;font-family:inherit;transition:.2s}
+.bs:hover{background:#fee;border-color:var(--err);color:var(--err)}
+.bb{border-color:#c5d9f8;color:var(--primary);background:#f0f6ff}
+.bb:hover{background:#ddeeff;border-color:var(--primary);color:var(--primary)}
+.badge{padding:3px 9px;border-radius:12px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.baj{background:#e6f4ea;color:#0d6e3d}
+.mod{background:#fff3e0;color:#b45309}
+.alt{background:#fce8e6;color:#b91c1c}
+
+.alert{padding:11px 16px;border-radius:8px;font-size:.83rem;font-weight:600;margin-bottom:14px;display:none;border-left:4px solid}
+.alert.ok2{background:var(--ok-bg);color:#1a5c2a;border-color:var(--ok);display:block}
+.alert.err2{background:var(--err-bg);color:#a50e0e;border-color:var(--err);display:block}
+
+/* Individual */
+.ind-sel{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.ind-sel select{padding:11px 14px;border-radius:9px;border:1.5px solid var(--border);
+  font-family:inherit;font-size:.88rem;flex:1;min-width:200px}
+.itv-alert{background:#fff3e0;border:2px solid #e65100;border-radius:10px;
+  padding:16px 20px;text-align:center;margin-top:14px}
+.itv-alert h4{color:#bf360c}
+.irow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0}
+.inum{width:28px;font-weight:700;font-size:.75rem;color:var(--t2);flex-shrink:0}
+.itxt{flex:1;font-size:.75rem;line-height:1.4}
+.ival{width:32px;text-align:center;font-weight:800;font-size:.86rem;flex-shrink:0}
+.ibar{width:80px;height:6px;background:#e0e0e0;border-radius:4px;overflow:hidden;flex-shrink:0}
+.ibf{height:100%;border-radius:4px}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:580px){
+  body{font-size:14px}
+  .hdr h1{font-size:.88rem}
+  .card{padding:16px 14px}
+  .adm-body{padding:14px 16px}
+  .adm-hdr{padding:14px 16px}
+  /* Pestañas en columna en móvil */
+  .tab-nav{grid-template-columns:1fr;gap:8px}
+  .tab-btn{flex-direction:row;justify-content:flex-start;
+    padding:14px 18px;gap:14px;text-align:left;border-radius:11px}
+  .tab-btn .ti{font-size:1.5rem}
+  .tab-btn .tl{font-size:.85rem;font-weight:700}
+  .sgrid{grid-template-columns:1fr 1fr}
+  .frow{flex-direction:column;gap:10px}
+  .fg{flex:1 1 100%}
+  .btn-row{flex-direction:column;align-items:stretch}
+  .btn{text-align:center}
+  /* Esc-opciones en móvil: 5 círculos siempre visibles */
+  .esc-opciones{gap:4px}
+  .esc-opcion .esc-circulo{width:34px;height:34px;font-size:.8rem}
+  .esc-opcion .esc-etq{font-size:.55rem;max-width:36px}
+}
+@media(min-width:581px) and (max-width:860px){
+  .sgrid{grid-template-columns:1fr 1fr}
+  .tab-nav{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!--  HEADER                                                    -->
-<!-- ═══════════════════════════════════════════════════════════ -->
-<header class="header">
-    <div class="header-inner">
-        <div class="header-icon">
-            <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
-        </div>
-        <h1>Evaluación de Adicción al Smartphone</h1>
-        <button class="admin-btn" id="adminToggleBtn">🔐 Admin</button>
-    </div>
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="hdr-ico"><svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg></div>
+    <h1>Evaluación de Adicción al Smartphone<small>EDAS-18 &amp; Escala Phubbing · Universidad de Caldas</small></h1>
+    <button class="adm-btn" id="adminBtn">🔐 Admin</button>
+  </div>
 </header>
 
-<main class="container">
+<main class="wrap">
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!--  VISTA PÚBLICA                                             -->
-<!-- ═══════════════════════════════════════════════════════════ -->
-<div id="vistaPublica">
-    <div id="globalAlert" style="display:none;"></div>
+<!-- ════════════════════════════
+     VISTA PÚBLICA
+════════════════════════════ -->
+<div id="vPub">
+  <div id="globalAlert" style="display:none"></div>
 
-    <!-- 1. Datos Sociodemográficos -->
-    <div class="card">
-        <div class="card-header"><div class="card-number">1</div><h2>Datos Sociodemográficos</h2></div>
-        <div class="card-body">
-            <div class="form-row">
-                <div class="form-group"><label>Nombre completo <span class="required">*</span></label><input type="text" id="nombre" placeholder="María García López"></div>
-                <div class="form-group"><label>Edad <span class="required">*</span></label><input type="number" id="edad" min="14" max="99" placeholder="22"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Sexo <span class="required">*</span></label><select id="sexo"><option value="">Seleccione...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
-                <div class="form-group"><label>Universidad <span class="required">*</span></label><select id="universidad"><option value="">Seleccione...</option><option value="Universidad de Caldas">Universidad de Caldas</option><option value="Universidad Nacional sede Manizales">Universidad Nacional sede Manizales</option><option value="Universidad Católica Luis Amigó">Universidad Católica Luis Amigó</option><option value="Universidad Autónoma de Manizales">Universidad Autónoma de Manizales</option><option value="Otra">Otra</option></select></div>
-            </div>
-            <div class="form-row hidden-field" id="rowOtraUniversidad">
-                <div class="form-group"><label>Especifique la universidad <span class="required">*</span></label><input type="text" id="otraUniversidad" placeholder="Escriba el nombre"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Programa académico <span class="required">*</span></label><input type="text" id="programa" placeholder="Psicología, Ingeniería..."></div>
-                <div class="form-group"><label>Semestre <span class="required">*</span></label><select id="semestre"><option value="">Seleccione...</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option><option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option><option value="9">9°</option><option value="10">10°</option><option value="11+">11° o más</option></select></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Ciudad de procedencia <span class="required">*</span></label><input type="text" id="ciudad" value="Manizales"></div>
-                <div class="form-group"><label>Departamento <span class="required">*</span></label><input type="text" id="departamento" value="Caldas"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Correo electrónico <span class="required">*</span></label><input type="email" id="correo" placeholder="correo@ejemplo.com"></div>
-                <div class="form-group"><label>Horas diarias de uso <span class="required">*</span></label><select id="horas"><option value="">Seleccione...</option><option value="Menos de 1 hora">Menos de 1 hora</option><option value="1 a 3 horas">1 a 3 horas</option><option value="3 a 5 horas">3 a 5 horas</option><option value="5 a 8 horas">5 a 8 horas</option><option value="Más de 8 horas">Más de 8 horas</option></select></div>
-            </div>
+  <!-- 1. Sociodemográficos -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">1</div>
+      <div><h2>Datos Sociodemográficos</h2><small>Todos los campos marcados con * son obligatorios</small></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Nombre completo <span class="req">*</span></label><input type="text" id="nombre" placeholder="María García López"></div>
+      <div class="fg"><label>Edad <span class="req">*</span></label><input type="number" id="edad" min="14" max="99" placeholder="22"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Sexo <span class="req">*</span></label>
+        <select id="sexo"><option value="">Seleccione...</option><option>Masculino</option><option>Femenino</option></select></div>
+      <div class="fg"><label>Universidad <span class="req">*</span></label>
+        <select id="universidad"><option value="">Seleccione...</option>
+          <option>Universidad de Caldas</option><option>Universidad Nacional sede Manizales</option>
+          <option>Universidad Católica Luis Amigó</option><option>Universidad Autónoma de Manizales</option>
+          <option value="Otra">Otra</option></select></div>
+    </div>
+    <div class="frow hf" id="rowOtra">
+      <div class="fg"><label>Especifique la universidad <span class="req">*</span></label><input type="text" id="otraUniv" placeholder="Nombre de la institución"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Programa académico <span class="req">*</span></label><input type="text" id="programa" placeholder="Psicología, Ingeniería..."></div>
+      <div class="fg"><label>Semestre <span class="req">*</span></label>
+        <select id="semestre"><option value="">Seleccione...</option>
+          <option value="1">1°</option><option value="2">2°</option><option value="3">3°</option>
+          <option value="4">4°</option><option value="5">5°</option><option value="6">6°</option>
+          <option value="7">7°</option><option value="8">8°</option><option value="9">9°</option>
+          <option value="10">10°</option><option value="11+">11° o más</option></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Ciudad de procedencia <span class="req">*</span></label><input type="text" id="ciudad" value="Manizales"></div>
+      <div class="fg"><label>Departamento <span class="req">*</span></label><input type="text" id="departamento" value="Caldas"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Correo electrónico <span class="req">*</span></label><input type="email" id="correo" placeholder="correo@ejemplo.com"></div>
+      <div class="fg"><label>Horas diarias de uso del smartphone <span class="req">*</span></label>
+        <select id="horas"><option value="">Seleccione...</option>
+          <option>Menos de 1 hora</option><option>1 a 3 horas</option>
+          <option>3 a 5 horas</option><option>5 a 8 horas</option><option>Más de 8 horas</option></select></div>
+    </div>
+  </div>
+
+  <!-- 2. EDAS-18 -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">2</div>
+      <div><h2>Escala EDAS-18</h2><small>Dependencia y Adicción al Smartphone · García-Domingo et al. (2020)</small></div>
+    </div>
+    <div class="esc-nota">
+      <strong>1</strong> = Totalmente en desacuerdo &nbsp;·&nbsp;
+      <strong>2</strong> = En desacuerdo &nbsp;·&nbsp;
+      <strong>3</strong> = Neutral &nbsp;·&nbsp;
+      <strong>4</strong> = De acuerdo &nbsp;·&nbsp;
+      <strong>5</strong> = Totalmente de acuerdo
+    </div>
+    <div id="escEDAS"></div>
+  </div>
+
+  <!-- 3. Phubbing -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">3</div>
+      <div><h2>Escala Phubbing (EP)</h2><small>Blanca &amp; Bendayan (2018)</small></div>
+    </div>
+    <div class="esc-nota">
+      <strong>1</strong> = Nunca &nbsp;·&nbsp;
+      <strong>2</strong> = Casi nunca &nbsp;·&nbsp;
+      <strong>3</strong> = A veces &nbsp;·&nbsp;
+      <strong>4</strong> = Casi siempre &nbsp;·&nbsp;
+      <strong>5</strong> = Siempre
+    </div>
+    <div id="escPHUB"></div>
+  </div>
+
+  <!-- 4. Consentimiento -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">4</div>
+      <div><h2>Consentimiento Informado</h2></div>
+    </div>
+    <div class="cons" id="consBox">
+      <input type="checkbox" id="consChk">
+      <label><strong>Declaro que soy mayor de edad y acepto participar voluntariamente.</strong><br>
+      Autorizo el uso anónimo y confidencial de mis respuestas exclusivamente con fines académicos.</label>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-s" onclick="limpiarForm()">↺ Limpiar</button>
+    <button class="btn btn-p" id="btnEnv" onclick="enviar()">Enviar respuestas →</button>
+  </div>
+
+  <!-- MENSAJE RESULTADO -->
+  <div id="msgBox">
+    <div class="mb-top">
+      <div class="mb-ico-wrap"><span id="mIco"></span></div>
+      <div><div id="mTit" class="mb-titulo"></div><div id="mSub" class="mb-sub"></div></div>
+    </div>
+    <div class="mb-body" id="mBody"></div>
+    <div class="mb-pie" id="mPie"></div>
+  </div>
+</div><!-- /vPub -->
+
+
+<!-- ════════════════════════════
+     VISTA ADMIN
+════════════════════════════ -->
+<div id="vAdm" style="display:none">
+  <div id="admAlert" class="alert"></div>
+
+  <nav class="tab-nav">
+    <button class="tab-btn ts act" onclick="cambiaTab('est',this)">
+      <span class="ti">📊</span><span class="tl">Estadísticas Grupales</span>
+    </button>
+    <button class="tab-btn ti2" onclick="cambiaTab('ind',this)">
+      <span class="ti">👤</span><span class="tl">Análisis Individual</span>
+    </button>
+    <button class="tab-btn tg" onclick="cambiaTab('ges',this)">
+      <span class="ti">⚙️</span><span class="tl">Gestión de Datos</span>
+    </button>
+  </nav>
+
+  <!-- ESTADÍSTICAS -->
+  <div id="secEst" class="adm-sec activa">
+    <div class="adm-card">
+      <div class="adm-hdr cs"><span class="si">📊</span>
+        <div><h3>Estadísticas Grupales</h3><p>Resumen agregado de todos los participantes</p></div></div>
+      <div class="adm-body" id="statsDiv"><p style="color:var(--t2)">Cargando...</p></div>
+    </div>
+  </div>
+
+  <!-- INDIVIDUAL -->
+  <div id="secInd" class="adm-sec">
+    <div class="adm-card">
+      <div class="adm-hdr ci"><span class="si">👤</span>
+        <div><h3>Análisis Individual</h3><p>Perfil detallado por participante</p></div></div>
+      <div class="adm-body">
+        <div class="ind-sel">
+          <label style="font-weight:700;font-size:.88rem;white-space:nowrap">Participante:</label>
+          <select id="selPart" onchange="verInd()"><option value="">-- Seleccione --</option></select>
         </div>
+        <div id="indDiv"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- 2. EDAS-18 -->
-    <div class="card">
-        <div class="card-header"><div class="card-number">2</div><h2>Escala EDAS-18</h2></div>
-        <div class="card-body">
-            <div class="matrix-wrapper">
-                <table class="matrix-table"><thead><tr><th class="col-question">Afirmación</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody id="tbodyEDAS"></tbody></table>
-            </div>
+  <!-- GESTIÓN -->
+  <div id="secGes" class="adm-sec">
+    <div class="adm-card">
+      <div class="adm-hdr cg"><span class="si">⚙️</span>
+        <div><h3>Gestión de Datos</h3><p>Exportar, editar y eliminar registros</p></div></div>
+      <div class="adm-body">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn btn-s" onclick="exportExcel()" style="font-size:.88rem;padding:10px 20px">📥 Exportar Excel</button>
+          <button class="btn btn-d" onclick="borrarTodo()" style="font-size:.88rem;padding:10px 20px">🗑️ Eliminar todos</button>
         </div>
-    </div>
-
-    <!-- 3. Phubbing -->
-    <div class="card">
-        <div class="card-header"><div class="card-number">3</div><h2>Escala Phubbing</h2></div>
-        <div class="card-body">
-            <div class="matrix-wrapper">
-                <table class="matrix-table"><thead><tr><th class="col-question">Afirmación</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody id="tbodyPhubbing"></tbody></table>
-            </div>
+        <div style="background:#fff8e1;border-left:4px solid #f9a825;padding:10px 14px;border-radius:7px;font-size:.8rem;color:#7c5c00;margin-bottom:14px">
+          ⚠️ Exporte los datos antes de eliminar. Las eliminaciones son <strong>irreversibles</strong>.
         </div>
-    </div>
-
-    <!-- 4. Consentimiento -->
-    <div class="card">
-        <div class="card-header"><div class="card-number">4</div><h2>Consentimiento Informado</h2></div>
-        <div class="card-body">
-            <div class="consent-box" id="consentBox">
-                <input type="checkbox" id="consentCheckbox">
-                <label><strong>* Declaro que soy mayor de edad y acepto participar voluntariamente.</strong><br>Autorizo el uso anónimo de mis respuestas con fines académicos.</label>
-            </div>
+        <div style="overflow-x:auto">
+          <table class="dtable" id="tabReg">
+            <thead><tr><th>#</th><th>Nombre</th><th>Edad</th><th>Sexo</th><th>EDAS</th><th>Nivel</th><th>Phub.</th><th>Nivel</th><th>Entrev.</th><th>Acción</th></tr></thead>
+            <tbody><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--t2)">Cargando...</td></tr></tbody>
+          </table>
         </div>
+      </div>
     </div>
-
-    <!-- BOTONES -->
-    <div class="btn-row">
-        <button class="btn btn-secondary" onclick="resetFormulario()">↺ Limpiar</button>
-        <button class="btn btn-primary" id="btnEnviar" onclick="enviarRespuesta()">Enviar respuestas</button>
-    </div>
-
-    <!-- ── MENSAJE DE ENVÍO (aparece AQUÍ, justo debajo del botón) ── -->
-    <div id="mensajeEnvio" class="mensaje-envio">
-        <div class="msj-top">
-            <span class="msj-icon"></span>
-            <div>
-                <div class="msj-titulo"></div>
-                <div class="msj-subtitulo"></div>
-            </div>
-        </div>
-        <div class="msj-body"></div>
-    </div>
-</div><!-- /vistaPublica -->
-
-
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!--  VISTA ADMIN                                               -->
-<!-- ═══════════════════════════════════════════════════════════ -->
-<div id="vistaAdmin" style="display:none;">
-    <div id="adminAlert" class="alert"></div>
-
-    <!-- Pestañas con iconos grandes y colores diferenciados -->
-    <nav class="tab-nav">
-        <button class="tab-btn tab-stats active" onclick="cambiarPestanaAdmin('estadisticas', this)">
-            <span class="tab-icon">📊</span>
-            <span class="tab-label">Estadísticas grupales</span>
-        </button>
-        <button class="tab-btn tab-indiv" onclick="cambiarPestanaAdmin('individual', this)">
-            <span class="tab-icon">👤</span>
-            <span class="tab-label">Análisis individual</span>
-        </button>
-        <button class="tab-btn tab-gestion" onclick="cambiarPestanaAdmin('gestion', this)">
-            <span class="tab-icon">⚙️</span>
-            <span class="tab-label">Gestión de datos</span>
-        </button>
-    </nav>
-
-    <!-- ── PESTAÑA 1: ESTADÍSTICAS ── -->
-    <div id="adminEstadisticas" class="admin-section active">
-        <div class="admin-card">
-            <div class="admin-section-header color-stats">
-                <span class="sec-icon">📊</span>
-                <h3>Estadísticas Grupales — Resumen de participantes</h3>
-            </div>
-            <div class="admin-card-body" id="statsContentAdmin">
-                <p style="color:var(--text-secondary)">Cargando datos...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── PESTAÑA 2: ANÁLISIS INDIVIDUAL ── -->
-    <div id="adminIndividual" class="admin-section">
-        <div class="admin-card">
-            <div class="admin-section-header color-indiv">
-                <span class="sec-icon">👤</span>
-                <h3>Análisis Individual — Perfil por participante</h3>
-            </div>
-            <div class="admin-card-body">
-                <div class="individual-select">
-                    <label style="font-weight:600;font-size:0.88rem;">Participante:</label>
-                    <select id="selectParticipante" onchange="mostrarAnalisisIndividualAdmin()">
-                        <option value="">-- Seleccione un participante --</option>
-                    </select>
-                </div>
-                <div id="analisisIndividualAdmin"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── PESTAÑA 3: GESTIÓN ── -->
-    <div id="adminGestion" class="admin-section">
-        <div class="admin-card">
-            <div class="admin-section-header color-gestion">
-                <span class="sec-icon">⚙️</span>
-                <h3>Gestión de Datos — Edición y eliminación de registros</h3>
-            </div>
-            <div class="admin-card-body">
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
-                    <button class="btn btn-secondary" onclick="exportarExcel()" style="display:flex;align-items:center;gap:6px;">
-                        📥 Exportar CSV/Excel
-                    </button>
-                    <button class="btn btn-danger" onclick="eliminarTodosRegistros()" style="display:flex;align-items:center;gap:6px;">
-                        🗑️ Eliminar todos los registros
-                    </button>
-                </div>
-                <div style="background:#fff3e0;border-left:4px solid #e65100;padding:10px 14px;border-radius:6px;font-size:0.82rem;color:#bf360c;margin-bottom:16px;">
-                    ⚠️ La eliminación de registros es irreversible. Asegúrese de exportar los datos antes de eliminar.
-                </div>
-                <div style="overflow-x:auto;">
-                    <table class="data-table" id="tablaRegistrosAdmin">
-                        <thead>
-                            <tr>
-                                <th>#</th><th>Nombre</th><th>Edad</th><th>Sexo</th>
-                                <th>EDAS</th><th>Nivel EDAS</th>
-                                <th>Phubbing</th><th>Nivel Phub.</th>
-                                <th>Entrevista</th><th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-secondary)">Cargando...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div><!-- /vistaAdmin -->
+  </div>
+</div><!-- /vAdm -->
 </main>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!--  JAVASCRIPT                                                -->
-<!-- ═══════════════════════════════════════════════════════════ -->
 <script>
-// ==================== CONFIGURACIÓN ====================
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_2O7YFneTE5kMkrpCYZcBJpbcoMbXKsPl3rZP6ljvn-ft2JfRDHcSihg4yJJ7uKe3oQ/exec';  // <-- CAMBIA AQUÍ
-const ADMIN_PASSWORD  = 'admin123';
+/* ════════════════════════════════════════
+   CONFIGURACIÓN
+════════════════════════════════════════ */
+const API  = 'https://script.google.com/macros/s/AKfycbx_2O7YFneTE5kMkrpCYZcBJpbcoMbXKsPl3rZP6ljvn-ft2JfRDHcSihg4yJJ7uKe3oQ/exec'; // ← CAMBIA AQUÍ
+const PWD  = 'admin123';
 
-// ==================== DATOS DE LAS ESCALAS ====================
-const edasItems = [
-    'Siento ansiedad si me quedo sin batería en el móvil.',
-    'Miro alguna de las aplicaciones del móvil (por ejemplo, WhatsApp, Instagram, Facebook, etc.) cada 5 minutos aproximadamente.',
-    'Mi familia, pareja, amigos, se han quejado alguna vez del tiempo que ocupo mirando el móvil.',
-    'Dedico un tiempo excesivo a mirar distintas aplicaciones del móvil (Facebook, Whatsapp, juegos, etc.).',
-    'Consulto el móvil constantemente incluso cuando estoy solo/a con otra persona.',
-    'Miro alguna de las aplicaciones del móvil (por ejemplo, WhatsApp, Instagram, Facebook, etc.) cada hora aproximadamente.',
-    'No dedico más tiempo del necesario a usar las aplicaciones de comunicación y ocio del móvil.',
-    'Miro frecuentemente el móvil en clase o en el trabajo.',
-    'Soy incapaz de dejar de usar el móvil aunque lo intente.',
-    'Dedico gran parte del día a usar las distintas aplicaciones del móvil.',
-    'Dedico parte de mi jornada laboral o estudiantil a consultar el móvil.',
-    'Mi principal motivación para echar o salir en una fotografía es compartirla inmediatamente a través de cualquier medio del móvil.',
-    'El uso del móvil ha interferido alguna vez con mi desempeño académico y/o laboral.',
-    'De mis actividades diarias, el uso del móvil es al que dedico más tiempo.',
-    'Si me despierto durante la noche siempre miro el móvil.',
-    'He intentado disminuir el uso que hago del móvil pero no puedo.',
-    'Mi comportamiento es más desinhibido cuando uso las aplicaciones de mensajería y redes sociales del móvil que en mi vida diaria.',
-    'Suelo utilizar el móvil cuando estoy en situaciones sociales con varias personas (en un bar con los amigos, en una comida familiar, etc.).'
+/* ════════════════════════════════════════
+   ÍTEMS
+════════════════════════════════════════ */
+const EDAS_ITEMS = [
+  'Siento ansiedad si me quedo sin batería en el móvil.',
+  'Miro alguna de las aplicaciones del móvil (WhatsApp, Instagram, Facebook…) cada 5 minutos aproximadamente.',
+  'Mi familia, pareja o amigos se han quejado del tiempo que ocupo mirando el móvil.',
+  'Dedico un tiempo excesivo a mirar distintas aplicaciones del móvil (Facebook, WhatsApp, juegos, etc.).',
+  'Consulto el móvil constantemente incluso cuando estoy solo/a con otra persona.',
+  'Miro alguna de las aplicaciones del móvil cada hora aproximadamente.',
+  'No dedico más tiempo del necesario a usar las aplicaciones de comunicación y ocio del móvil.',  // ítem inverso
+  'Miro frecuentemente el móvil en clase o en el trabajo.',
+  'Soy incapaz de dejar de usar el móvil aunque lo intente.',
+  'Dedico gran parte del día a usar las distintas aplicaciones del móvil.',
+  'Dedico parte de mi jornada laboral o estudiantil a consultar el móvil.',
+  'Mi principal motivación para salir en una fotografía es compartirla inmediatamente por el móvil.',
+  'El uso del móvil ha interferido alguna vez con mi desempeño académico y/o laboral.',
+  'De mis actividades diarias, el uso del móvil es al que dedico más tiempo.',
+  'Si me despierto durante la noche siempre miro el móvil.',
+  'He intentado disminuir el uso que hago del móvil pero no puedo.',
+  'Mi comportamiento es más desinhibido cuando uso las aplicaciones de mensajería y redes sociales.',
+  'Suelo utilizar el móvil cuando estoy en situaciones sociales (bar con amigos, comida familiar, etc.).'
 ];
-const phubbingItems = [
-    'Estoy pendiente de mi teléfono móvil cuando estoy en compañía de otras personas.',
-    'Estoy ocupado/a con mi teléfono móvil cuando estoy con mis amigos/as.',
-    'Otras personas se quejan sobre mi uso del teléfono móvil.',
-    'Estoy ocupado/a con mi móvil cuando estoy con mis familiares.',
-    'A mi pareja le molesta que esté ocupado/a con el móvil (o familiares, si no tienes pareja).',
-    'Mi teléfono móvil está siempre a mi alcance.',
-    'Lo primero que hago al despertarme es mirar mis mensajes en el móvil.',
-    'Me siento vacío/a sin mi móvil.',
-    'Cada día aumenta mi uso del teléfono móvil.',
-    'El tiempo que dedico a actividades sociales, personales o profesionales se reduce por el tiempo que uso el móvil.'
+const PHUB_ITEMS = [
+  'Estoy pendiente de mi teléfono móvil cuando estoy en compañía de otras personas.',
+  'Estoy ocupado/a con mi teléfono móvil cuando estoy con mis amigos/as.',
+  'Otras personas se quejan sobre mi uso del teléfono móvil.',
+  'Estoy ocupado/a con mi móvil cuando estoy con mis familiares.',
+  'A mi pareja le molesta que esté ocupado/a con el móvil (o a mis familiares).',
+  'Mi teléfono móvil está siempre a mi alcance.',
+  'Lo primero que hago al despertarme es mirar mis mensajes en el móvil.',
+  'Me siento vacío/a sin mi móvil.',
+  'Cada día aumenta mi uso del teléfono móvil.',
+  'El tiempo que dedico a actividades sociales, personales o profesionales se reduce por el uso del móvil.'
 ];
 
-// ==================== CONSTRUCCIÓN DE MATRICES ====================
-function buildMatrix(tbodyId, items, prefix) {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    items.forEach((texto, i) => {
-        const tr = document.createElement('tr');
-        const tdQ = document.createElement('td');
-        tdQ.className = 'col-question';
-        tdQ.textContent = (i + 1) + '. ' + texto;
-        tr.appendChild(tdQ);
-        for (let v = 1; v <= 5; v++) {
-            const td = document.createElement('td');
-            const radio = document.createElement('input');
-            radio.type  = 'radio';
-            radio.name  = prefix + '_' + (i + 1);
-            radio.value = v;
-            td.appendChild(radio);
-            tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-    });
+const EDAS_ETQ = ['Tot. desacuerdo','En desacuerdo','Neutral','De acuerdo','Tot. de acuerdo'];
+const PHUB_ETQ = ['Nunca','Casi nunca','A veces','Casi siempre','Siempre'];
+
+/* ════════════════════════════════════════
+   CONSTRUIR ESCALAS (tarjetas con 5 círculos)
+════════════════════════════════════════ */
+function buildEsc(contId, items, prefix, etqs) {
+  const cont = document.getElementById(contId);
+  items.forEach((txt, i) => {
+    const n = i + 1;
+    const div = document.createElement('div');
+    div.className = 'esc-item';
+    div.id = 'item_' + prefix + '_' + n;
+
+    const titulo = document.createElement('div');
+    titulo.className = 'esc-txt';
+    titulo.textContent = n + '. ' + txt + (prefix === 'EDAS' && i === 6 ? ' *' : '');
+    div.appendChild(titulo);
+
+    const oRow = document.createElement('div');
+    oRow.className = 'esc-opciones';
+
+    for (let v = 1; v <= 5; v++) {
+      const lbl = document.createElement('label');
+      lbl.className = 'esc-opcion';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = prefix + '_' + n;
+      radio.value = v;
+      radio.addEventListener('change', () => {
+        div.classList.add('respondido');
+      });
+
+      const circulo = document.createElement('div');
+      circulo.className = 'esc-circulo';
+      circulo.textContent = v;
+
+      const etq = document.createElement('div');
+      etq.className = 'esc-etq';
+      etq.textContent = etqs[v - 1];
+
+      lbl.appendChild(radio);
+      lbl.appendChild(circulo);
+      lbl.appendChild(etq);
+      oRow.appendChild(lbl);
+    }
+
+    div.appendChild(oRow);
+    cont.appendChild(div);
+  });
 }
-buildMatrix('tbodyEDAS',    edasItems,    'EDAS');
-buildMatrix('tbodyPhubbing', phubbingItems, 'PHUB');
 
-// Otra universidad
-document.getElementById('universidad').addEventListener('change', function () {
-    const row = document.getElementById('rowOtraUniversidad');
-    if (this.value === 'Otra') row.classList.add('visible');
-    else row.classList.remove('visible');
+buildEsc('escEDAS', EDAS_ITEMS, 'EDAS', EDAS_ETQ);
+buildEsc('escPHUB', PHUB_ITEMS, 'PHUB', PHUB_ETQ);
+
+/* ════════════════════════════════════════
+   EVENTOS FORM
+════════════════════════════════════════ */
+document.getElementById('universidad').addEventListener('change', function() {
+  const r = document.getElementById('rowOtra');
+  if (this.value === 'Otra') r.classList.add('vis');
+  else { r.classList.remove('vis'); document.getElementById('otraUniv').value = ''; }
+});
+document.getElementById('consBox').addEventListener('click', () => {
+  const c = document.getElementById('consChk');
+  c.checked = !c.checked;
+  document.getElementById('consBox').classList.toggle('ok', c.checked);
 });
 
-// Consentimiento
-document.getElementById('consentBox').addEventListener('click', () => {
-    const cb = document.getElementById('consentCheckbox');
-    cb.checked = !cb.checked;
-    document.getElementById('consentBox').classList.toggle('checked', cb.checked);
-});
-
-// ==================== VALIDACIÓN ====================
-function getRadioVal(name) {
-    const r = document.querySelector(`input[name="${name}"]:checked`);
-    return r ? parseInt(r.value) : null;
+/* ════════════════════════════════════════
+   VALIDACIÓN
+════════════════════════════════════════ */
+function radioVal(name) {
+  const r = document.querySelector(`input[name="${name}"]:checked`);
+  return r ? parseInt(r.value) : null;
 }
 
-function validarFormulario() {
-    const errores = [];
-    if (!document.getElementById('nombre').value.trim()) errores.push('Nombre completo');
-    const edad = parseInt(document.getElementById('edad').value);
-    if (isNaN(edad) || edad < 14 || edad > 99) errores.push('Edad (debe ser entre 14 y 99 años)');
-    if (!document.getElementById('sexo').value) errores.push('Sexo');
-    const uni = document.getElementById('universidad').value;
-    if (!uni) errores.push('Universidad');
-    if (uni === 'Otra' && !document.getElementById('otraUniversidad').value.trim()) errores.push('Especificar universidad');
-    if (!document.getElementById('programa').value.trim()) errores.push('Programa académico');
-    if (!document.getElementById('semestre').value) errores.push('Semestre');
-    if (!document.getElementById('ciudad').value.trim()) errores.push('Ciudad de procedencia');
-    if (!document.getElementById('departamento').value.trim()) errores.push('Departamento');
-    const correo = document.getElementById('correo').value.trim();
-    if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('Correo electrónico válido');
-    if (!document.getElementById('horas').value) errores.push('Horas diarias de uso');
+function validar() {
+  const err = [];
+  if (!document.getElementById('nombre').value.trim())     err.push('Nombre completo');
+  const edad = parseInt(document.getElementById('edad').value);
+  if (isNaN(edad) || edad < 14 || edad > 99)              err.push('Edad válida (14–99 años)');
+  if (!document.getElementById('sexo').value)              err.push('Sexo');
+  const uni = document.getElementById('universidad').value;
+  if (!uni)                                                err.push('Universidad');
+  if (uni === 'Otra' && !document.getElementById('otraUniv').value.trim()) err.push('Nombre de la universidad');
+  if (!document.getElementById('programa').value.trim())   err.push('Programa académico');
+  if (!document.getElementById('semestre').value)          err.push('Semestre');
+  if (!document.getElementById('ciudad').value.trim())     err.push('Ciudad de procedencia');
+  if (!document.getElementById('departamento').value.trim()) err.push('Departamento');
+  const correo = document.getElementById('correo').value.trim();
+  if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) err.push('Correo electrónico válido');
+  if (!document.getElementById('horas').value)             err.push('Horas diarias de uso');
 
-    // Escalas: detecta el primer ítem faltante
-    let primeraFaltaEDAS = null, primeraFaltaPHUB = null;
-    for (let i = 1; i <= 18; i++) {
-        if (!getRadioVal('EDAS_' + i)) { primeraFaltaEDAS = i; break; }
-    }
-    for (let i = 1; i <= 10; i++) {
-        if (!getRadioVal('PHUB_' + i)) { primeraFaltaPHUB = i; break; }
-    }
-    if (primeraFaltaEDAS) errores.push(`Escala EDAS-18: falta responder desde el ítem ${primeraFaltaEDAS}`);
-    if (primeraFaltaPHUB) errores.push(`Escala Phubbing: falta responder desde el ítem ${primeraFaltaPHUB}`);
-    if (!document.getElementById('consentCheckbox').checked) errores.push('Aceptar el consentimiento informado');
+  let fE = null, fP = null;
+  for (let i = 1; i <= 18; i++) if (!radioVal('EDAS_' + i)) { fE = i; break; }
+  for (let i = 1; i <= 10; i++) if (!radioVal('PHUB_' + i)) { fP = i; break; }
+  if (fE) err.push(`Escala EDAS-18: responder desde el ítem ${fE}`);
+  if (fP) err.push(`Escala Phubbing: responder desde el ítem ${fP}`);
+  if (!document.getElementById('consChk').checked) err.push('Aceptar el consentimiento informado');
 
-    return { ok: errores.length === 0, errores, primeraFaltaEDAS, primeraFaltaPHUB };
+  return { ok: err.length === 0, err, fE, fP };
 }
 
-// ==================== MENSAJE ABAJO DEL BOTÓN ====================
-function mostrarMensajeExito() {
-    const box = document.getElementById('mensajeEnvio');
-    box.className = 'mensaje-envio success';
-    box.querySelector('.msj-icon').textContent   = '🎉';
-    box.querySelector('.msj-titulo').textContent  = '¡Tus respuestas han sido enviadas con éxito!';
-    box.querySelector('.msj-subtitulo').textContent = 'Muchas gracias por tu participación en esta investigación.';
-    box.querySelector('.msj-body').innerHTML = `
-        <p>✅ <strong>Registro completado.</strong> Tu información ha quedado guardada de forma segura.</p>
-        <p>🔒 Tus datos serán tratados con total <strong>confidencialidad</strong> y utilizados únicamente con fines académicos.</p>
-        <p>💙 Tu aporte es muy valioso para avanzar en el conocimiento sobre el uso del smartphone.</p>
-    `;
-    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    setTimeout(() => ocultarMensaje(), 8000);
+/* ════════════════════════════════════════
+   MENSAJES
+════════════════════════════════════════ */
+function showOk() {
+  const b = document.getElementById('msgBox');
+  b.className = 'ok';
+  document.getElementById('mIco').textContent = '🎉';
+  document.getElementById('mTit').textContent = '¡Respuestas enviadas con éxito!';
+  document.getElementById('mSub').textContent = 'Muchas gracias por participar en esta investigación.';
+  document.getElementById('mBody').innerHTML = `
+    <div class="mb-linea"><span class="ml-ico">✅</span><span><strong>Registro completado.</strong> Tus respuestas han quedado guardadas de forma segura.</span></div>
+    <div class="mb-linea"><span class="ml-ico">🔒</span><span>Tus datos serán tratados con total <strong>confidencialidad</strong>, usados únicamente con fines académicos.</span></div>
+    <div class="mb-linea"><span class="ml-ico">💙</span><span>Tu aporte es <strong>muy valioso</strong> para el avance del conocimiento sobre el uso del smartphone.</span></div>`;
+  document.getElementById('mPie').textContent = 'El formulario se limpiará automáticamente en unos segundos…';
+  b.style.display = 'block';
+  b.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  setTimeout(() => { b.style.display='none'; b.className=''; }, 9000);
 }
 
-function mostrarMensajeError(errores) {
-    const box = document.getElementById('mensajeEnvio');
-    box.className = 'mensaje-envio error';
-    box.querySelector('.msj-icon').textContent   = '⚠️';
-    box.querySelector('.msj-titulo').textContent  = 'No se pudo enviar el formulario';
-    box.querySelector('.msj-subtitulo').textContent = '';
-    const items = errores.map(e => `<li>${e}</li>`).join('');
-    box.querySelector('.msj-body').innerHTML = `
-        <p class="error-intro">Por favor completa o corrige los siguientes campos:</p>
-        <ul>${items}</ul>
-        <p class="error-footer">✏️ Revisa cada sección y vuelve a intentarlo.</p>
-    `;
-    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+function showErr(errs) {
+  const b = document.getElementById('msgBox');
+  b.className = 'err';
+  document.getElementById('mIco').textContent = '⚠️';
+  document.getElementById('mTit').textContent = 'No se pudo enviar el formulario';
+  document.getElementById('mSub').textContent = 'Revisa los campos señalados y vuelve a intentarlo';
+  document.getElementById('mBody').innerHTML = `
+    <p class="err-intro">Por favor completa o corrige los siguientes campos:</p>
+    <ul>${errs.map(e => `<li>${xss(e)}</li>`).join('')}</ul>
+    <p class="mb-pie" style="background:none;color:#a50e0e;padding:0;font-size:.78rem;font-style:italic">
+      ✏️ Desplázate a la sección correspondiente y completa la información faltante.</p>`;
+  document.getElementById('mPie').textContent = '';
+  b.style.display = 'block';
+  b.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
-function ocultarMensaje() {
-    const box = document.getElementById('mensajeEnvio');
-    box.className = 'mensaje-envio';
-    box.style.display = 'none';
-}
+/* ════════════════════════════════════════
+   ENVÍO
+════════════════════════════════════════ */
+async function enviar() {
+  const v = validar();
+  if (!v.ok) {
+    showErr(v.err);
+    const dest = v.fE
+      ? document.getElementById('item_EDAS_' + v.fE)
+      : v.fP ? document.getElementById('item_PHUB_' + v.fP) : null;
+    if (dest) setTimeout(() => dest.scrollIntoView({ behavior:'smooth', block:'center' }), 400);
+    return;
+  }
 
-// ==================== ENVÍO ====================
-async function enviarRespuesta() {
-    const valid = validarFormulario();
+  const eR = [], pR = [];
+  for (let i = 1; i <= 18; i++) eR.push(radioVal('EDAS_' + i));
+  for (let i = 1; i <= 10; i++) pR.push(radioVal('PHUB_' + i));
 
-    if (!valid.ok) {
-        mostrarMensajeError(valid.errores);
-        // Llevar al primer ítem faltante de las escalas
-        if (valid.primeraFaltaEDAS) {
-            const el = document.querySelector(`input[name="EDAS_${valid.primeraFaltaEDAS}"]`);
-            if (el) el.closest('tr').scrollIntoView({ behavior:'smooth', block:'center' });
-        } else if (valid.primeraFaltaPHUB) {
-            const el = document.querySelector(`input[name="PHUB_${valid.primeraFaltaPHUB}"]`);
-            if (el) el.closest('tr').scrollIntoView({ behavior:'smooth', block:'center' });
-        }
-        return;
-    }
+  // Cálculo con ítem 7 inverso
+  let pE = 0;
+  eR.forEach((val, i) => { pE += (i === 6) ? (6 - val) : val; });
+  const pP = pR.reduce((a, b) => a + b, 0);
+  const nE = pE <= 39 ? 'Bajo' : pE <= 59 ? 'Moderado' : 'Alto';
+  const nP = pP <= 19 ? 'Bajo' : pP <= 34 ? 'Moderado' : 'Alto';
+  const entrev = (nE === 'Alto' || nP === 'Alto') ? 'SÍ' : 'No';
 
-    const edasResp    = [];
-    const phubbingResp = [];
-    for (let i = 1; i <= 18; i++) edasResp.push(getRadioVal('EDAS_' + i));
-    for (let i = 1; i <= 10; i++) phubbingResp.push(getRadioVal('PHUB_' + i));
+  let uni = document.getElementById('universidad').value;
+  if (uni === 'Otra') uni = document.getElementById('otraUniv').value.trim();
 
-    let universidad = document.getElementById('universidad').value;
-    if (universidad === 'Otra') universidad = document.getElementById('otraUniversidad').value.trim();
+  const payload = {
+    nombre: document.getElementById('nombre').value.trim(),
+    edad: parseInt(document.getElementById('edad').value),
+    sexo: document.getElementById('sexo').value,
+    universidad: uni,
+    programa: document.getElementById('programa').value.trim(),
+    semestre: document.getElementById('semestre').value,
+    ciudad: document.getElementById('ciudad').value.trim(),
+    departamento: document.getElementById('departamento').value.trim(),
+    correo: document.getElementById('correo').value.trim(),
+    horas: document.getElementById('horas').value,
+    edasResp: eR, phubbingResp: pR,
+    puntajeEDAS: pE, nivelEDAS: nE,
+    puntajePHUB: pP, nivelPHUB: nP,
+    candidato_entrevista: entrev
+  };
 
-    const payload = {
-        nombre:      document.getElementById('nombre').value.trim(),
-        edad:        parseInt(document.getElementById('edad').value),
-        sexo:        document.getElementById('sexo').value,
-        universidad: universidad,
-        programa:    document.getElementById('programa').value.trim(),
-        semestre:    document.getElementById('semestre').value,
-        ciudad:      document.getElementById('ciudad').value.trim(),
-        departamento:document.getElementById('departamento').value.trim(),
-        correo:      document.getElementById('correo').value.trim(),
-        horas:       document.getElementById('horas').value,
-        edasResp:    edasResp,
-        phubbingResp:phubbingResp
-    };
+  const btn = document.getElementById('btnEnv');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="enviando-wrap">
+    <span class="enviando-spin"></span>
+    <span class="enviando-pts">Enviando</span>
+  </span>`;
 
-    const btn = document.getElementById('btnEnviar');
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
-
-    try {
-        await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        mostrarMensajeExito();
-        setTimeout(() => resetFormulario(), 2500);
-    } catch (error) {
-        mostrarMensajeError(['Error de conexión: ' + error.message + '. Verifica tu internet e intenta de nuevo.']);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Enviar respuestas';
-    }
-}
-
-// ==================== LIMPIAR FORMULARIO ====================
-function resetFormulario() {
-    document.querySelectorAll('#vistaPublica input[type="text"], #vistaPublica input[type="number"], #vistaPublica input[type="email"]')
-        .forEach(el => el.value = '');
-    document.querySelectorAll('#vistaPublica select').forEach(el => el.selectedIndex = 0);
-    document.querySelectorAll('#vistaPublica input[type="radio"]').forEach(el => el.checked = false);
-    document.getElementById('consentCheckbox').checked = false;
-    document.getElementById('consentBox').classList.remove('checked');
-    document.getElementById('ciudad').value       = 'Manizales';
-    document.getElementById('departamento').value = 'Caldas';
-    document.getElementById('rowOtraUniversidad').classList.remove('visible');
-    document.getElementById('otraUniversidad').value = '';
-    ocultarMensaje();
-}
-
-// ==================== PANEL ADMIN ====================
-let datosGlobales = [];
-
-async function cargarDatosAdmin() {
-    try {
-        const url = `${APPS_SCRIPT_URL}?action=getData&password=${ADMIN_PASSWORD}`;
-        const res  = await fetch(url);
-        const json = await res.json();
-        if (json.success) {
-            datosGlobales = json.data;
-            actualizarEstadisticasAdmin();
-            actualizarTablaRegistrosAdmin();
-            actualizarSelectParticipantesAdmin();
-        } else {
-            mostrarAlertaAdmin('Error al cargar datos', 'error');
-        }
-    } catch (e) {
-        mostrarAlertaAdmin('Error de red: ' + e.message, 'error');
-    }
-}
-
-function mostrarAlertaAdmin(msg, tipo) {
-    const div = document.getElementById('adminAlert');
-    div.textContent = msg;
-    div.className   = `alert alert-${tipo}`;
-    div.style.display = 'block';
-    setTimeout(() => { div.style.display = 'none'; }, 5000);
-}
-
-// ── Estadísticas ──────────────────────────────────────────────
-function actualizarEstadisticasAdmin() {
-    const div = document.getElementById('statsContentAdmin');
-    if (!datosGlobales.length) { div.innerHTML = '<p style="color:var(--text-secondary)">No hay datos registrados aún.</p>'; return; }
-    const n = datosGlobales.length;
-    let sumE = 0, sumP = 0;
-    const cntE = {Bajo:0, Moderado:0, Alto:0};
-    const cntP = {Bajo:0, Moderado:0, Alto:0};
-    const sexoC = {Masculino:0, Femenino:0};
-    const horasC = {};
-    const edades = [];
-    datosGlobales.forEach(r => {
-        sumE += r.puntaje_EDAS; sumP += r.puntaje_PHUB;
-        cntE[r.nivel_EDAS]++; cntP[r.nivel_PHUB]++;
-        if (r.sexo === 'Masculino') sexoC.Masculino++;
-        else if (r.sexo === 'Femenino') sexoC.Femenino++;
-        horasC[r.horas_uso] = (horasC[r.horas_uso] || 0) + 1;
-        edades.push(r.edad);
+  try {
+    await fetch(API, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
     });
-    const pct = v => ((v / n) * 100).toFixed(1);
-    const entrevistas = datosGlobales.filter(r => r.candidato_entrevista === 'SÍ').length;
-    div.innerHTML = `
-        <div class="stats-grid">
-            <div class="stat-card"><h4>📋 Participantes</h4><p style="font-size:2.2rem;font-weight:700;color:var(--primary)">${n}</p></div>
-            <div class="stat-card"><h4>📱 Promedio EDAS-18</h4><p style="font-size:2.2rem;font-weight:700;color:var(--primary)">${(sumE/n).toFixed(1)}<span style="font-size:0.9rem"> /90</span></p></div>
-            <div class="stat-card"><h4>📵 Promedio Phubbing</h4><p style="font-size:2.2rem;font-weight:700;color:var(--primary)">${(sumP/n).toFixed(1)}<span style="font-size:0.9rem"> /50</span></p></div>
-            <div class="stat-card"><h4>🔔 Candidatos entrevista</h4><p style="font-size:2.2rem;font-weight:700;color:#e65100">${entrevistas}</p><p style="font-size:0.8rem;color:var(--text-secondary)">${pct(entrevistas)}% del total</p></div>
-        </div>
-        <div class="stats-grid">
-            <div class="stat-card"><h4>Distribución EDAS-18</h4>
-                <p>Bajo: ${cntE.Bajo} (${pct(cntE.Bajo)}%)</p><div class="progress-bar"><div class="progress-fill fill-low" style="width:${pct(cntE.Bajo)}%"></div></div>
-                <p>Moderado: ${cntE.Moderado} (${pct(cntE.Moderado)}%)</p><div class="progress-bar"><div class="progress-fill fill-moderate" style="width:${pct(cntE.Moderado)}%"></div></div>
-                <p>Alto: ${cntE.Alto} (${pct(cntE.Alto)}%)</p><div class="progress-bar"><div class="progress-fill fill-high" style="width:${pct(cntE.Alto)}%"></div></div>
-            </div>
-            <div class="stat-card"><h4>Distribución Phubbing</h4>
-                <p>Bajo: ${cntP.Bajo} (${pct(cntP.Bajo)}%)</p><div class="progress-bar"><div class="progress-fill fill-low" style="width:${pct(cntP.Bajo)}%"></div></div>
-                <p>Moderado: ${cntP.Moderado} (${pct(cntP.Moderado)}%)</p><div class="progress-bar"><div class="progress-fill fill-moderate" style="width:${pct(cntP.Moderado)}%"></div></div>
-                <p>Alto: ${cntP.Alto} (${pct(cntP.Alto)}%)</p><div class="progress-bar"><div class="progress-fill fill-high" style="width:${pct(cntP.Alto)}%"></div></div>
-            </div>
-            <div class="stat-card"><h4>Sexo</h4>
-                <p>Masculino: ${sexoC.Masculino} (${pct(sexoC.Masculino)}%)</p>
-                <p>Femenino: ${sexoC.Femenino} (${pct(sexoC.Femenino)}%)</p>
-            </div>
-            <div class="stat-card"><h4>Horas de uso</h4>
-                ${Object.entries(horasC).map(([k,v]) => `<p>${escapeHtml(k)}: ${v} (${pct(v)}%)</p>`).join('')}
-            </div>
-        </div>`;
+    showOk();
+    setTimeout(() => limpiarForm(), 3200);
+  } catch(e) {
+    showErr(['Error de conexión: ' + e.message + '. Verifica tu internet e intenta de nuevo.']);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enviar respuestas →';
+  }
 }
 
-// ── Tabla registros ───────────────────────────────────────────
-function actualizarTablaRegistrosAdmin() {
-    const tbody = document.querySelector('#tablaRegistrosAdmin tbody');
-    if (!datosGlobales.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-secondary)">No hay registros</td></tr>';
-        return;
-    }
-    tbody.innerHTML = datosGlobales.map((r, i) => {
-        const badgeE = `<span class="badge badge-${r.nivel_EDAS.toLowerCase()}">${r.nivel_EDAS}</span>`;
-        const badgeP = `<span class="badge badge-${r.nivel_PHUB.toLowerCase()}">${r.nivel_PHUB}</span>`;
-        return `<tr>
-            <td>${i + 1}</td>
-            <td><strong>${escapeHtml(r.nombre)}</strong></td>
-            <td>${r.edad}</td>
-            <td>${r.sexo}</td>
-            <td>${r.puntaje_EDAS}</td>
-            <td>${badgeE}</td>
-            <td>${r.puntaje_PHUB}</td>
-            <td>${badgeP}</td>
-            <td>${r.candidato_entrevista === 'SÍ' ? '🔔 SÍ' : 'No'}</td>
-            <td>
-                <button class="btn-sm" title="Ver análisis individual" onclick="irAIndividual(${i})" style="margin-right:4px;">👤</button>
-                <button class="btn-sm" title="Eliminar" onclick="eliminarRegistroAdmin(${i})">🗑️</button>
-            </td>
-        </tr>`;
-    }).join('');
+/* ════════════════════════════════════════
+   LIMPIAR FORMULARIO
+════════════════════════════════════════ */
+function limpiarForm() {
+  ['nombre','programa','correo','otraUniv'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('ciudad').value='Manizales';
+  document.getElementById('departamento').value='Caldas';
+  document.getElementById('edad').value='';
+  document.querySelectorAll('#vPub select').forEach(s=>s.selectedIndex=0);
+  document.querySelectorAll('#vPub input[type="radio"]').forEach(r=>r.checked=false);
+  document.querySelectorAll('.esc-item').forEach(el=>el.classList.remove('respondido'));
+  document.getElementById('consChk').checked=false;
+  document.getElementById('consBox').classList.remove('ok');
+  document.getElementById('rowOtra').classList.remove('vis');
+  const b=document.getElementById('msgBox'); b.style.display='none'; b.className='';
 }
 
-// ── Análisis individual ───────────────────────────────────────
-function actualizarSelectParticipantesAdmin() {
-    const select = document.getElementById('selectParticipante');
-    select.innerHTML = '<option value="">-- Seleccione un participante --</option>';
-    datosGlobales.forEach((r, i) => {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = `${r.nombre} (${r.edad} años, ${r.sexo})`;
-        select.appendChild(opt);
-    });
-    document.getElementById('analisisIndividualAdmin').innerHTML = '';
+/* ════════════════════════════════════════
+   ADMIN — PESTAÑAS
+════════════════════════════════════════ */
+function cambiaTab(tab, btn) {
+  document.querySelectorAll('.adm-sec').forEach(s=>s.classList.remove('activa'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('act'));
+  const mapa = {est:'secEst',ind:'secInd',ges:'secGes'};
+  document.getElementById(mapa[tab]).classList.add('activa');
+  btn.classList.add('act');
 }
 
-function irAIndividual(idx) {
-    cambiarPestanaAdmin('individual', document.querySelectorAll('.tab-btn')[1]);
-    document.getElementById('selectParticipante').value = idx;
-    mostrarAnalisisIndividualAdmin();
+/* ════════════════════════════════════════
+   ADMIN — CARGAR DATOS
+════════════════════════════════════════ */
+let DATOS = [];
+
+async function cargarAdmin() {
+  try {
+    const r = await fetch(`${API}?action=getData&password=${PWD}`);
+    const j = await r.json();
+    if (j.success) {
+      DATOS = j.data || [];
+      renderStats();
+      renderTabla();
+      renderSelect();
+    } else { alertAdm('Error al cargar datos: '+(j.error||''),'err2'); }
+  } catch(e) { alertAdm('Error de red: '+e.message,'err2'); }
 }
 
-function mostrarAnalisisIndividualAdmin() {
-    const idx = document.getElementById('selectParticipante').value;
-    const div = document.getElementById('analisisIndividualAdmin');
-    if (idx === '') { div.innerHTML = ''; return; }
-    const r = datosGlobales[parseInt(idx)];
-    if (!r) return;
+function alertAdm(msg, cls) {
+  const d=document.getElementById('admAlert');
+  d.textContent=msg; d.className='alert '+cls;
+  d.style.display='block';
+  setTimeout(()=>d.style.display='none',5000);
+}
 
-    const edasResp = [];
-    for (let i = 1; i <= 18; i++) edasResp.push(r[`EDAS_${i}`]);
-    const phubResp = [];
-    for (let i = 1; i <= 10; i++) phubResp.push(r[`PHUB_${i}`]);
-
-    let interp = '';
-    if (r.nivel_EDAS === 'Alto' && r.nivel_PHUB === 'Alto')
-        interp = 'Puntuaciones elevadas en ambas escalas. Se recomienda evaluación clínica más profunda.';
-    else if (r.nivel_EDAS === 'Alto')
-        interp = 'Posible dependencia y adicción al smartphone, con ansiedad e interferencia en la vida diaria.';
-    else if (r.nivel_PHUB === 'Alto')
-        interp = 'Fuerte tendencia al phubbing; puede afectar sus relaciones interpersonales.';
-    else if (r.nivel_EDAS === 'Moderado' || r.nivel_PHUB === 'Moderado')
-        interp = 'Nivel moderado de riesgo. Se aconseja monitorear el uso del smartphone.';
-    else
-        interp = 'Uso normativo del smartphone sin alteraciones significativas.';
-
-    const badgeNivel = n => `<span class="badge badge-${n.toLowerCase()}">${n}</span>`;
-
-    let html = `
-    <div class="stats-grid">
-        <div class="stat-card"><h4>Datos personales</h4>
-            <p>${escapeHtml(r.nombre)}<br>${r.edad} años — ${r.sexo}</p>
-            <p>${escapeHtml(r.universidad)}<br>${escapeHtml(r.programa)} | Sem. ${r.semestre}</p>
-            <p>${escapeHtml(r.ciudad)}, ${escapeHtml(r.departamento)}</p>
-            <p>Uso: ${escapeHtml(r.horas_uso)}</p>
-        </div>
-        <div class="stat-card"><h4>Resultados</h4>
-            <p>EDAS-18: <strong>${r.puntaje_EDAS}/90</strong> ${badgeNivel(r.nivel_EDAS)}</p>
-            <p>Phubbing: <strong>${r.puntaje_PHUB}/50</strong> ${badgeNivel(r.nivel_PHUB)}</p>
-            <p style="margin-top:8px">Entrevista: <strong>${r.candidato_entrevista === 'SÍ' ? '🔔 SÍ' : 'No'}</strong></p>
-        </div>
-        <div class="stat-card"><h4>Interpretación</h4><p style="font-size:0.84rem">${interp}</p></div>
+/* ════════════════════════════════════════
+   ESTADÍSTICAS
+════════════════════════════════════════ */
+function renderStats() {
+  const d = document.getElementById('statsDiv');
+  if (!DATOS.length) { d.innerHTML='<p style="color:var(--t2);padding:8px 0">No hay datos aún.</p>'; return; }
+  const n=DATOS.length, cE={Bajo:0,Moderado:0,Alto:0}, cP={Bajo:0,Moderado:0,Alto:0};
+  let sE=0,sP=0; const sxC={Masculino:0,Femenino:0}, hC={}, ages=[];
+  DATOS.forEach(r=>{
+    sE+=+r.puntaje_EDAS; sP+=+r.puntaje_PHUB;
+    if(cE[r.nivel_EDAS]!==undefined) cE[r.nivel_EDAS]++;
+    if(cP[r.nivel_PHUB]!==undefined) cP[r.nivel_PHUB]++;
+    if(r.sexo==='Masculino') sxC.Masculino++; else if(r.sexo==='Femenino') sxC.Femenino++;
+    hC[r.horas_uso]=(hC[r.horas_uso]||0)+1;
+    ages.push(+r.edad);
+  });
+  const pct=v=>((v/n)*100).toFixed(1);
+  const ent=DATOS.filter(r=>r.candidato_entrevista==='SÍ').length;
+  d.innerHTML=`
+  <div class="sgrid">
+    <div class="sc"><h4>📋 Participantes</h4><div class="sv">${n}</div></div>
+    <div class="sc"><h4>📱 Prom. EDAS-18</h4><div class="sv">${(sE/n).toFixed(1)}</div><div class="ss">de 90 pts</div></div>
+    <div class="sc"><h4>📵 Prom. Phubbing</h4><div class="sv">${(sP/n).toFixed(1)}</div><div class="ss">de 50 pts</div></div>
+    <div class="sc"><h4>🔔 Candidatos</h4><div class="sv" style="color:#c5221f">${ent}</div><div class="ss">${pct(ent)}% del total</div></div>
+  </div>
+  <div class="sgrid">
+    <div class="sc"><h4>Distribución EDAS-18</h4>
+      <p>Bajo: ${cE.Bajo} (${pct(cE.Bajo)}%)</p><div class="pb"><div class="pf fl" style="width:${pct(cE.Bajo)}%"></div></div>
+      <p>Moderado: ${cE.Moderado} (${pct(cE.Moderado)}%)</p><div class="pb"><div class="pf fm" style="width:${pct(cE.Moderado)}%"></div></div>
+      <p>Alto: ${cE.Alto} (${pct(cE.Alto)}%)</p><div class="pb"><div class="pf fh" style="width:${pct(cE.Alto)}%"></div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
-        <div>
-            <h4 style="margin-bottom:8px;font-size:0.85rem">📱 Ítems EDAS-18</h4>
-            <div class="item-analysis">`;
-    edasResp.forEach((val, i) => {
-        const c = val >= 4 ? '#d93025' : val === 3 ? '#f9a825' : '#0d904f';
-        html += `<div class="item-row">
-            <span class="item-num">${i+1}${i===6?'*':''}</span>
-            <span class="item-text">${edasItems[i]}</span>
-            <span class="item-value">${val}</span>
-            <div class="item-bar"><div class="item-bar-fill" style="width:${val*20}%;background:${c}"></div></div>
-        </div>`;
-    });
-    html += `</div><p style="font-size:0.7rem;margin-top:6px;color:var(--text-secondary)">* Ítem inverso</p></div>
-        <div>
-            <h4 style="margin-bottom:8px;font-size:0.85rem">📵 Ítems Phubbing</h4>
-            <div class="item-analysis">`;
-    phubResp.forEach((val, i) => {
-        const c = val >= 4 ? '#d93025' : val === 3 ? '#f9a825' : '#0d904f';
-        html += `<div class="item-row">
-            <span class="item-num">${i+1}</span>
-            <span class="item-text">${phubbingItems[i]}</span>
-            <span class="item-value">${val}</span>
-            <div class="item-bar"><div class="item-bar-fill" style="width:${val*20}%;background:${c}"></div></div>
-        </div>`;
-    });
-    html += `</div></div></div>
-    ${r.candidato_entrevista === 'SÍ' ? `<div class="interview-alert"><h4>📋 ENTREVISTA RECOMENDADA</h4><p>Este participante requiere una valoración cualitativa adicional.</p></div>` : ''}`;
-    div.innerHTML = html;
+    <div class="sc"><h4>Distribución Phubbing</h4>
+      <p>Bajo: ${cP.Bajo} (${pct(cP.Bajo)}%)</p><div class="pb"><div class="pf fl" style="width:${pct(cP.Bajo)}%"></div></div>
+      <p>Moderado: ${cP.Moderado} (${pct(cP.Moderado)}%)</p><div class="pb"><div class="pf fm" style="width:${pct(cP.Moderado)}%"></div></div>
+      <p>Alto: ${cP.Alto} (${pct(cP.Alto)}%)</p><div class="pb"><div class="pf fh" style="width:${pct(cP.Alto)}%"></div></div>
+    </div>
+    <div class="sc"><h4>Sexo</h4>
+      <p>Masculino: ${sxC.Masculino} (${pct(sxC.Masculino)}%)</p>
+      <p>Femenino: ${sxC.Femenino} (${pct(sxC.Femenino)}%)</p>
+      ${ages.length?`<hr style="margin:8px 0;border-color:#eee"><p>Edad prom.: ${(ages.reduce((a,b)=>a+b)/ages.length).toFixed(1)}</p><p>Rango: ${Math.min(...ages)}–${Math.max(...ages)}</p>`:''}
+    </div>
+    <div class="sc"><h4>Horas de uso</h4>
+      ${Object.entries(hC).map(([k,v])=>`<p>${xss(k)}: ${v} (${pct(v)}%)</p>`).join('')}
+    </div>
+  </div>`;
 }
 
-// ── Eliminar ──────────────────────────────────────────────────
-async function eliminarRegistroAdmin(index) {
-    const nombre = datosGlobales[index]?.nombre || 'este registro';
-    if (!confirm(`¿Eliminar a "${nombre}"?\nEsta acción es irreversible.`)) return;
-    const filaFisica = index + 2;
-    try {
-        const url = `${APPS_SCRIPT_URL}?action=deleteRow&rowIndex=${filaFisica}&password=${ADMIN_PASSWORD}`;
-        await fetch(url);
-        await cargarDatosAdmin();
-        mostrarAlertaAdmin('Registro eliminado correctamente.', 'success');
-    } catch (e) {
-        mostrarAlertaAdmin('Error al eliminar: ' + e.message, 'error');
-    }
+/* ════════════════════════════════════════
+   TABLA GESTIÓN
+════════════════════════════════════════ */
+function renderTabla() {
+  const tb=document.querySelector('#tabReg tbody');
+  if(!DATOS.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--t2)">No hay registros.</td></tr>';return;}
+  tb.innerHTML=DATOS.map((r,i)=>`<tr>
+    <td>${i+1}</td>
+    <td><strong>${xss(r.nombre)}</strong></td>
+    <td>${r.edad}</td><td>${r.sexo}</td>
+    <td><strong>${r.puntaje_EDAS}</strong></td>
+    <td><span class="badge ${badgeCls(r.nivel_EDAS)}">${r.nivel_EDAS}</span></td>
+    <td><strong>${r.puntaje_PHUB}</strong></td>
+    <td><span class="badge ${badgeCls(r.nivel_PHUB)}">${r.nivel_PHUB}</span></td>
+    <td>${r.candidato_entrevista==='SÍ'?'🔔 SÍ':'No'}</td>
+    <td style="white-space:nowrap">
+      <button class="bs bb" onclick="irInd(${i})" title="Ver análisis">👤</button>&nbsp;
+      <button class="bs" onclick="borrarReg(${i})" title="Eliminar">🗑️</button>
+    </td></tr>`).join('');
 }
 
-async function eliminarTodosRegistros() {
-    if (!confirm('⚠️ ¿Eliminar TODOS los registros?\nEsta acción es irreversible y no se puede deshacer.')) return;
-    try {
-        const url = `${APPS_SCRIPT_URL}?action=clearAll&password=${ADMIN_PASSWORD}`;
-        await fetch(url);
-        await cargarDatosAdmin();
-        mostrarAlertaAdmin('Todos los registros han sido eliminados.', 'success');
-    } catch (e) {
-        mostrarAlertaAdmin('Error al limpiar datos: ' + e.message, 'error');
-    }
+function badgeCls(n){return n==='Bajo'?'baj':n==='Moderado'?'mod':'alt';}
+
+/* ════════════════════════════════════════
+   ANÁLISIS INDIVIDUAL
+════════════════════════════════════════ */
+function renderSelect() {
+  const sel=document.getElementById('selPart');
+  sel.innerHTML='<option value="">-- Seleccione --</option>';
+  DATOS.forEach((r,i)=>{
+    const o=document.createElement('option');
+    o.value=i; o.textContent=`${r.nombre} (${r.edad} años, ${r.sexo})`;
+    sel.appendChild(o);
+  });
+  document.getElementById('indDiv').innerHTML='';
 }
 
-// ── Exportar ──────────────────────────────────────────────────
-function exportarExcel() {
-    if (!datosGlobales.length) { mostrarAlertaAdmin('No hay datos para exportar.', 'error'); return; }
-    let csv = "Nombre,Edad,Sexo,Universidad,Programa,Semestre,Ciudad,Departamento,Correo,Horas uso,EDAS_total,Nivel_EDAS,PHUB_total,Nivel_PHUB,Entrevista\n";
-    datosGlobales.forEach(r => {
-        csv += `"${esc(r.nombre)}",${r.edad},"${esc(r.sexo)}","${esc(r.universidad)}","${esc(r.programa)}","${r.semestre}","${esc(r.ciudad)}","${esc(r.departamento)}","${esc(r.correo)}","${r.horas_uso}",${r.puntaje_EDAS},"${r.nivel_EDAS}",${r.puntaje_PHUB},"${r.nivel_PHUB}","${r.candidato_entrevista}"\n`;
-    });
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'datos_smartphone_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
+function irInd(i){
+  cambiaTab('ind', document.querySelectorAll('.tab-btn')[1]);
+  document.getElementById('selPart').value=i; verInd();
 }
 
-// ── Pestañas admin ────────────────────────────────────────────
-function cambiarPestanaAdmin(pestana, btnClicado) {
-    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('admin' + pestana.charAt(0).toUpperCase() + pestana.slice(1)).classList.add('active');
-    if (btnClicado) btnClicado.classList.add('active');
+function verInd(){
+  const idx=document.getElementById('selPart').value;
+  const div=document.getElementById('indDiv');
+  if(idx===''){div.innerHTML='';return;}
+  const r=DATOS[parseInt(idx)]; if(!r) return;
+
+  const eR=[], pR=[];
+  for(let i=1;i<=18;i++) eR.push(+(r[`EDAS_${i}`])||0);
+  for(let i=1;i<=10;i++) pR.push(+(r[`PHUB_${i}`])||0);
+
+  let interp='';
+  if(r.nivel_EDAS==='Alto'&&r.nivel_PHUB==='Alto') interp='Puntuaciones elevadas en ambas escalas. Se recomienda evaluación clínica más profunda.';
+  else if(r.nivel_EDAS==='Alto') interp='Posible dependencia y adicción al smartphone con ansiedad e interferencia en vida diaria.';
+  else if(r.nivel_PHUB==='Alto') interp='Fuerte tendencia al phubbing; puede afectar relaciones interpersonales.';
+  else if(r.nivel_EDAS==='Moderado'||r.nivel_PHUB==='Moderado') interp='Nivel moderado de riesgo. Se aconseja monitorear el uso del smartphone.';
+  else interp='Uso normativo del smartphone, sin alteraciones significativas.';
+
+  const bc=v=>v>=4?'#d93025':v===3?'#f9a825':'#0d904f';
+  const barRow=(v,i,items,inv)=>`<div class="irow">
+    <span class="inum">${i+1}${inv?'*':''}</span>
+    <span class="itxt">${xss(items[i])}</span>
+    <span class="ival" style="color:${bc(v)}">${v}</span>
+    <div class="ibar"><div class="ibf" style="width:${v*20}%;background:${bc(v)}"></div></div>
+  </div>`;
+
+  div.innerHTML=`
+  <div class="sgrid" style="margin-top:8px">
+    <div class="sc" style="text-align:left">
+      <h4>Datos personales</h4>
+      <p style="font-weight:700;font-size:.92rem;margin-bottom:4px">${xss(r.nombre)}</p>
+      <p style="font-size:.8rem">${r.edad} años — ${r.sexo}</p>
+      <p style="font-size:.8rem">${xss(r.universidad)}</p>
+      <p style="font-size:.8rem">${xss(r.programa)} | Sem. ${r.semestre}</p>
+      <p style="font-size:.8rem;color:var(--t2)">Uso: ${xss(r.horas_uso)}</p>
+    </div>
+    <div class="sc">
+      <h4>Resultados</h4>
+      <p>EDAS-18: <strong>${r.puntaje_EDAS}/90</strong> <span class="badge ${badgeCls(r.nivel_EDAS)}">${r.nivel_EDAS}</span></p>
+      <p>Phubbing: <strong>${r.puntaje_PHUB}/50</strong> <span class="badge ${badgeCls(r.nivel_PHUB)}">${r.nivel_PHUB}</span></p>
+      <p style="margin-top:8px">Entrevista: <strong>${r.candidato_entrevista==='SÍ'?'🔔 SÍ':'No'}</strong></p>
+    </div>
+    <div class="sc">
+      <h4>Interpretación</h4>
+      <p style="font-size:.8rem;line-height:1.5">${interp}</p>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px">
+    <div class="sc">
+      <h4 style="color:var(--primary);margin-bottom:8px">📱 Ítems EDAS-18</h4>
+      ${eR.map((v,i)=>barRow(v,i,EDAS_ITEMS,i===6)).join('')}
+      <p style="font-size:.67rem;color:var(--t2);margin-top:6px">* Ítem inverso (ya corregido)</p>
+    </div>
+    <div class="sc">
+      <h4 style="color:#0d904f;margin-bottom:8px">📵 Ítems Phubbing</h4>
+      ${pR.map((v,i)=>barRow(v,i,PHUB_ITEMS,false)).join('')}
+    </div>
+  </div>
+  ${r.candidato_entrevista==='SÍ'?'<div class="itv-alert"><h4>📋 ENTREVISTA RECOMENDADA</h4><p>Este participante requiere valoración cualitativa adicional.</p></div>':''}`;
 }
 
-// ── Autenticación ─────────────────────────────────────────────
-let mostrarAdmin = false;
-document.getElementById('adminToggleBtn').addEventListener('click', async () => {
-    if (!mostrarAdmin) {
-        const pwd = prompt('Ingrese la contraseña de administrador:');
-        if (pwd === ADMIN_PASSWORD) {
-            mostrarAdmin = true;
-            document.getElementById('vistaPublica').style.display = 'none';
-            document.getElementById('vistaAdmin').style.display   = 'block';
-            document.getElementById('adminToggleBtn').textContent  = '🔓 Cerrar admin';
-            await cargarDatosAdmin();
-        } else {
-            alert('Contraseña incorrecta');
-        }
-    } else {
-        mostrarAdmin = false;
-        document.getElementById('vistaPublica').style.display = 'block';
-        document.getElementById('vistaAdmin').style.display   = 'none';
-        document.getElementById('adminToggleBtn').textContent  = '🔐 Admin';
-    }
+/* ════════════════════════════════════════
+   ELIMINAR
+════════════════════════════════════════ */
+async function borrarReg(i) {
+  const nom=DATOS[i]?.nombre||'este registro';
+  if(!confirm(`¿Eliminar a "${nom}"?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    await fetch(`${API}?action=deleteRow&rowIndex=${i+2}&password=${PWD}`);
+    await cargarAdmin(); alertAdm('Registro eliminado.','ok2');
+  } catch(e){alertAdm('Error: '+e.message,'err2');}
+}
+
+async function borrarTodo() {
+  if(!confirm('⚠️ ¿Eliminar TODOS los registros?\nEsta acción es irreversible.')) return;
+  try {
+    await fetch(`${API}?action=clearAll&password=${PWD}`);
+    await cargarAdmin(); alertAdm('Todos los registros eliminados.','ok2');
+  } catch(e){alertAdm('Error: '+e.message,'err2');}
+}
+
+/* ════════════════════════════════════════
+   EXPORTAR EXCEL — TODOS LOS ÍTEMS
+════════════════════════════════════════ */
+function exportExcel() {
+  if(!DATOS.length){alertAdm('No hay datos para exportar.','err2');return;}
+
+  const H=[
+    'Nombre','Edad','Sexo','Universidad','Programa','Semestre',
+    'Ciudad','Departamento','Correo','Horas_Uso',
+    'EDAS_1','EDAS_2','EDAS_3','EDAS_4','EDAS_5','EDAS_6','EDAS_7_inv',
+    'EDAS_8','EDAS_9','EDAS_10','EDAS_11','EDAS_12','EDAS_13','EDAS_14',
+    'EDAS_15','EDAS_16','EDAS_17','EDAS_18',
+    'PHUB_1','PHUB_2','PHUB_3','PHUB_4','PHUB_5',
+    'PHUB_6','PHUB_7','PHUB_8','PHUB_9','PHUB_10',
+    'Puntaje_EDAS','Nivel_EDAS','Puntaje_Phubbing','Nivel_Phubbing','Candidato_Entrevista'
+  ];
+
+  const ex=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const cel=(v)=>{
+    const num=v!==''&&v!=null&&!isNaN(parseFloat(v))&&isFinite(v)&&typeof v!=='string';
+    return `<Cell><Data ss:Type="${num?'Number':'String'}">${ex(v)}</Data></Cell>`;
+  };
+
+  let rows=`<Row ss:StyleID="H">${H.map(h=>`<Cell><Data ss:Type="String">${ex(h)}</Data></Cell>`).join('')}</Row>`;
+
+  DATOS.forEach(r=>{
+    const eI=[]; for(let i=1;i<=18;i++) eI.push(r[`EDAS_${i}`]??'');
+    const pI=[]; for(let i=1;i<=10;i++) pI.push(r[`PHUB_${i}`]??'');
+    const fila=[
+      r.nombre,r.edad,r.sexo,r.universidad,r.programa,r.semestre,
+      r.ciudad,r.departamento,r.correo,r.horas_uso,
+      ...eI,...pI,
+      r.puntaje_EDAS,r.nivel_EDAS,r.puntaje_PHUB,r.nivel_PHUB,r.candidato_entrevista
+    ];
+    rows+=`<Row>${fila.map(v=>cel(v)).join('')}</Row>`;
+  });
+
+  const xml=`<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles>
+  <Style ss:ID="H"><Font ss:Bold="1"/><Interior ss:Color="#D9E2F3" ss:Pattern="Solid"/></Style>
+</Styles>
+<Worksheet ss:Name="EDAS18_Datos">
+<Table>${rows}</Table>
+</Worksheet></Workbook>`;
+
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='EDAS18_datos_'+new Date().toISOString().slice(0,10)+'.xls';
+  a.click();
+  alertAdm('Excel descargado con todos los ítems.','ok2');
+}
+
+/* ════════════════════════════════════════
+   AUTENTICACIÓN ADMIN
+════════════════════════════════════════ */
+let adminOn=false;
+document.getElementById('adminBtn').addEventListener('click', async()=>{
+  if(!adminOn){
+    const p=prompt('Contraseña de administrador:');
+    if(p===PWD){
+      adminOn=true;
+      document.getElementById('vPub').style.display='none';
+      document.getElementById('vAdm').style.display='block';
+      document.getElementById('adminBtn').textContent='🔓 Salir';
+      await cargarAdmin();
+    } else alert('Contraseña incorrecta.');
+  } else {
+    adminOn=false;
+    document.getElementById('vPub').style.display='block';
+    document.getElementById('vAdm').style.display='none';
+    document.getElementById('adminBtn').textContent='🔐 Admin';
+  }
 });
 
-// Helpers
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
-}
-function esc(str) {
-    if (!str) return '';
-    return String(str).replace(/"/g, '""');
+/* ── Helper XSS ── */
+function xss(s){
+  if(s==null) return '';
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 </script>
 </body>
